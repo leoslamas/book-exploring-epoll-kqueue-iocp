@@ -5,6 +5,13 @@ epoll (on Linux), kequeue (on Macos) and IOCP (on Windows) work.
 
 We do this by implementing a very simple and extremely limited cross platform event loop.
 
+## Code examples
+
+The code for this book lives in this repository: [examples-minimio](https://github.com/cfsamson/examples-minimio)
+
+The name `minimio` was chosen because of the similarity with the full fledged library in rust
+called [mio](https://github.com/tokio-rs/mio).
+
 ## Motivation
 
 This is a companion book to my previous [Exploring Async Basics by Implementing a Node Event Loop in Rust]
