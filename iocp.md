@@ -8,7 +8,7 @@ As you might gather from this, `Epoll`and `Kqueue`notifies us earlier in the cyc
 
 Provide an API where we're not dependent on whether we're ready to start or done. In the case of a `Read`action on a `TcpStreap`this is when we call `TcpStream::read()`. 
 
-## Raw materials
+## The raw materials on Windows
 
 The raw materials for creating an IOCP event queue is as follows:
 
