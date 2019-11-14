@@ -60,7 +60,7 @@ The next important part is the `registrator`. Now this is what actually allows u
 The `Poll` instance and the `registrator`is what we really want to test. These two together provides all we really need to handle our event queue. The `Poll`instance handles waiting for events and returning information on an event we're waiting for. The `registrator`let's us register interest in new events. The rest is really "plumbing" we need to test this in a realistic scenario.
 
 {% hint style="info" %}
-We're assuming that the normal use case here is that we keep the registrator on one thread and send `Poll`of to a different thread where it will wait for events to occur. Of curse this need not be the case but it's important for us that we consider this use case in pur design from the start.let \(evt\_sender, evt\_reciever\) = channel\(\);
+We're assuming that the normal use case here is that we keep the registrator on one thread and send `Poll`of to a different thread where it will wait for events to occur. Of curse this need not be the case but it's important for us that we consider this use case in pur design from the start.
 {% endhint %}
 
 The next thing we do is to create a channel to send events from our `eventqueue`thread to our main thread which will act on the event that occurred. We also need a runtime to store a list of events we are waiting for and the logic we want to run when the event is ready.
@@ -124,14 +124,14 @@ registrator
 
 There is one important thing to note here. First I thought I could use the standard `std::net::TcpStream`here. And that worked well enough when implementing the readiness based models `Epoll and Kqueue`, but once you start implementing `IOCP`you realize that you have a problem!
 
-How can you handle the fact that `Kqueue/Epoll`alerts you when data **is ready to be read** while `IOCP`alerts you when data **has been read**? At some point you either need to abstract over this implementation detail, or you have to let the user handle the fact that he/she is dealing with two platform dependant implementations...
+How can you handle the fact that `Kqueue/Epoll`alerts you when data **is ready to be read** while `IOCP`alerts you when data **has been read**? At some point you either need to abstract over this implementation detail, or you have to let the user handle the fact that they're dealing with two platform dependant implementations...
 
-We can't have the user care about this, so we need to abstract over something so they don't have to worry about this. 
+The answer is that we can't have the user care about this. We need to abstract over something so they don't have to worry about this. 
 
 {% hint style="info" %}
-Yes, it was a little bit annoying to figure this out when you thought you had a design that worked, for two platforms already and required a substantial rewrite to work with the third, but hey, if you're reading this at least you can avoid the same pitfall I went into so it's atleast helpful for you :\)
+Yes, it was a little bit annoying to figure this out when I thought I had a design that worked for two platforms. It required a substantial rewrite to work with `IOCP`, but hey, if you're reading this at least you can learn from my mistake.
 
-My recommendation is to actually start the other way around, figure out a design that works for `IOCP`and fit the readiness based solutions into working with that API and not the other way around.
+My recommendation is to actually start the other way around, figure out a design that works for `IOCP`and fit the readiness based solutions into working with that API. It's easier than to start with the readiness based ones an try to fit IOCP into that model.
 {% endhint %}
 
 We choose to abstract over the difference between the readiness based models and the completion based model by providing our own `TcpStream`struct which you need to use with this library. This is the same as for example `mio`does so at least we're in good company.
