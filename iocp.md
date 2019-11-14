@@ -20,7 +20,7 @@ This syscall gives us a handle to a completion port. To us this will represent t
 
 ### WSARecv
 
-This syscall registers and interest in `Read`events on a socket. Windows calls this an `Recieve`event.
+This syscall registers an interest in `Read`events on a socket. Windows calls this an `Recieve`event.
 
 {% embed url="https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecv" %}
 
@@ -44,7 +44,7 @@ When requesting resources from the OS directly we're also responsible for lettin
 
 ### PostQueuedCompletionStatus
 
-It turns out that closing a thread which has yielded control to the OS is not so easy. We actually need to wake up the thread and let it know that we want it to stop waiting, release it's resources and close down gracefully. To do this we issue a timeout event with the timeout set to 0 which means it times out immidiately. We have to register interest to get woken up when the timeout event has completed and we need this call to do jus
+It turns out that closing a thread which has yielded control to the OS is not so easy. We actually need to wake up the thread and let it know that we want it to stop waiting, release it's resources and close down gracefully. To do this we issue a timeout event with the timeout set to 0 which means it times out immidiately. We have to register interest to get woken up from our blocking `Poll::poll()`when the timeout event has completed and we need this syscall will let us register such an interest to our completion port.
 
 {% embed url="https://docs.microsoft.com/en-us/windows/win32/fileio/postqueuedcompletionstatus" %}
 
