@@ -20,7 +20,22 @@ The `Registrator`has one job. It tells our operating system that we're intereste
 
 TcpStream is an I/O resource we want to register an interest in. This needs to be abstracted over if we want to support both `Epoll`,`Kqueue`and `IOCP`. We'll only cover the case of beeing interested in `Read`events on the `TcpStream`but this is only limited to what kind of resources the OS allows us to register interests on.
 
+The goal is that we can use our queue like this:
 
+```rust
+let poll = Poll::new();
+let registrator = poll.registrator();
+
+let handle = thread::spawn(move || {
+    loop {
+        // blocks until an event is ready
+        poll.poll(...);
+    }
+};
+// lets us register interest in events
+registrator.register(...);
+...
+```
 
 This is really all there is to it. The concept is not difficult, but making these compontents requires some raw materials which is dependant on the OS. Let's dive in and introduce everything we need to make this event queue work.
 
