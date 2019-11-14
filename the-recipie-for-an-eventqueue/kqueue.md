@@ -1,26 +1,30 @@
+---
+description: >-
+  Kqueue is the relevant macanism on BSD based Operating Systems. One example of
+  this is Macos. Kqueue, similarely to Epoll, is a readiness based model.
+---
+
 # Kqueue
 
-Kqueue is the relevant macanism on BSD based Operating Systems. One example of this is Macos. Kqueue, similarely to Epoll, is a _readiness_ based model. 
+## The Kqueue raw materials:
 
-### The raw materials for a Kqueue:
-
-#### `kqueue`
+### `kqueue`
 
 Kqueue is a system call which provides us with a generic method which lets us get notified when an kernel event has occured. Similarely to the `CreateCompletionPort`on Windows this returns a handle to an event queue file descriptor.
 
 {% embed url="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages\_iPhoneOS/man2/kqueue.2.html" %}
 
-#### `kevent`
+### `kevent`
 
 In contrast to IOCP \(and Epoll\), we use the same syscall to registe and wait for events. The `kqueue`syscall will know what to do based on the arguments we provide. As we'll see, this results in a pretty elegant API but it can be a bit hard to wrap your head around in the start. It's documented on the same manpage as `kqueue`.
 
-#### `close`
+### `close`
 
 We need a way to close the file handle to our event queue. The `close`syscall lets us do just that.
 
 ### Important structures
 
-#### `Kevent(structure)`
+### `Kevent(structure)`
 
 Not to be confused with the `kevent`syscall. This structure is the most important way for us to provide information to our `kevent`syscall what we want to do.
 
@@ -48,7 +52,7 @@ pub struct Kevent {
 We'll explain the filters and flags we need to use when we show how to use `kqueue`in practice, but please note the `udata`field. This lets us attach a value which is untouched by the OS. We need a way to identify which event that has occured and this field will be valuable for us.
 {% endhint %}
 
-#### `Timespec`
+### `Timespec`
 
  Timeouts on `BSD` is passed as a  `Timespec`struct. It's important for us since we want to be able to set a timeout fow how long we want to wait for an event before the thread calling `poll`is woken up.
 
@@ -63,9 +67,7 @@ pub(super) struct Timespec {
 }
 ```
 
-### Usefull flags and constants
-
-#### Flags
+## Usefull flags and constants
 
 ```rust
 pub const EVFILT_READ: i16 = -1;
@@ -81,8 +83,4 @@ The exact meaning of these is described in the `Kqueue`manpage. However, getting
 {% hint style="info" %}
 We could have represented all of these as hex values but as I've gotten them from different sources I've left them as found.
 {% endhint %}
-
-#### Constants
-
-We don't need any special constants on BSD. Great!
 

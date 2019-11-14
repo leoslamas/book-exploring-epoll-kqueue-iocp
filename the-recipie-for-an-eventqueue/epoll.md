@@ -1,6 +1,8 @@
-# Epoll
+---
+description: Epoll is the Linux way of providing a scalable event queue.
+---
 
-Epoll is the Linux way of providing a scalable event queue. 
+# Epoll
 
 ## The raw materials in Epoll
 

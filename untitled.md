@@ -1,4 +1,4 @@
-# Creating a Library in Rust
+# Designing our API
 
 The first thing we need to do is to create a library project to start coding. We'll name our project `minimio.`
 
@@ -10,7 +10,7 @@ cd minimio
 cargo init --lib
 ```
 
-### Designing our API
+### Using integration tests to drive the API design
 
 The first think I like to do when I know roughly what API  I want to use is to start a new project by defining roughly the API I want to use. 
 
@@ -31,15 +31,13 @@ Reacently, `mio` changed from using IOCP as the backing API on Windows and start
 In Rust, it's common to have unit tests in the same file as code. Integration tests usually goes in a sperate `tests`folder, so let's make one. Our folder structure should look like this once done:
 
 ```text
-minimio -
-        |
-        |--> src
-        |     |
-        |     |--> lib.rs
-        |
-        |--> tests
-        |     |
-        |     |--> api.rs
+minimio
+   |
+   |--> src
+   |     |--> lib.rs
+   |
+   |--> tests
+   |      |--> api.rs
 ```
 
 Now open `api.rs`and let's start desiging how we want our API to work:
