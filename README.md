@@ -1,6 +1,6 @@
 # Introduction
 
-If you've read about asynchonous programming and how webservers and other hight performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and conciese introduction to all three of them and a practical way to learn how they work and how you can use them.
+If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and conciese introduction to all three of them and a practical way to learn how they work and how you can use them.
 
 {% hint style="info" %}
 This book is developed in the open and has two repositories:
@@ -41,7 +41,7 @@ After we're done you should have a pretty good understanding of how Epoll. Kqueu
 
 ### Motivation
 
-This is a companion book to my previous \[Exploring Async Basics by Implementing a Node Event Loop in Rust\] and since both `libuv` and `mio` uses a cross platform eventloop using epoll, kqueue and IOCP under the hood I needed to cover this subject in some detail as well.
+This is a companion book to my previous book: [The Node Experiment - Explorign Async Basics with Rust](https://cfsamson.github.io/book-exploring-async-basics/). Since both `libuv` and `mio` uses a cross platform eventloop using epoll, kqueue and IOCP under the hood I needed to cover this subject in some detail as well.
 
 ## Status
 
