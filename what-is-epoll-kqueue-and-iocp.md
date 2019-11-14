@@ -1,8 +1,15 @@
-# What is Epoll, Kqueue and IOCP?
+---
+description: >-
+  Before we start talking about the details on each platform. Let's start by
+  looking at why you should care by talking about ways to handle external events
+  and I/O operations.
+---
 
-Before we start talking about how to use these API's, lets just briefly introduce what they are. 
+# External events and I/O
 
-### Efficient I/O
+### Ways to handle I/O events.
+
+I/O has one important property: it takes time. And it's not we that's busy, it's some other computer, a disk or some other peripheral that we need to wait on.
 
 Now, to do most I/O operations, we need to go through the Operating System. Most systems provides several APIs to accomplish these tasks. Let's divide them into `blocking`and `nonblocking`versions.
 

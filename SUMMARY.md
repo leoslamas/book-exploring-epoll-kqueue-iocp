@@ -1,7 +1,7 @@
 # Table of contents
 
 * [Introduction](README.md)
-* [What is Epoll, Kqueue and IOCP?](what-is-epoll-kqueue-and-iocp.md)
+* [External events and I/O](what-is-epoll-kqueue-and-iocp.md)
 * [An event queue recipie](the-recipie-for-an-eventqueue/README.md)
   * [Introduction](the-recipie-for-an-eventqueue/introduction.md)
   * [IOCP](the-recipie-for-an-eventqueue/iocp.md)
