@@ -25,7 +25,7 @@ The name `minimio` was chosen because of the similarity with the full fledged li
 
 ### What we'll do
 
-We'll create an extremely simple cross platform library which leverages Epoll on Linux, Kqueue on BSD/Macos and IOCP for Windows to read incoming data from a socket. Our main focus is to introduce the different syscalls and the infrastructure we need to create a workigin event queue.
+We'll create an extremely simple cross platform library which leverages Epoll on Linux, Kqueue on BSD/Macos and IOCP for Windows to read incoming data from a socket. Our main focus is to introduce the different syscalls and the infrastructure we need to create a working event queue.
 
 {% hint style="info" %}
 We'll avoid any external dependencies so we make sure we remove as much "magic" as possible to make sure we really understand the tools we use.
