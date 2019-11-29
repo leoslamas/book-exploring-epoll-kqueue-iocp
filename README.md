@@ -1,6 +1,6 @@
 # Introduction
 
-If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and conciese introduction to all three of them and a practical way to learn how they work and how you can use them.
+If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and concise introduction to all three of them and a practical way to learn how they work and how you can use them.
 
 {% hint style="info" %}
 This book is developed in the open and has two repositories:
