@@ -200,7 +200,7 @@ use minimio::{Events, Interests, Poll, Registrator, TcpStream};
 use std::{io, io::Read, io::Write, thread};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-const TEST_TOKEN: usize = 10; // Hard coded for this test only
+const TEST_TOKEN: usize = 10; 
 
 fn main() {
     let (evt_sender, evt_reciever) = channel();
