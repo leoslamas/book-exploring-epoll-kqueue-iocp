@@ -37,7 +37,7 @@ Even though this might be configured on some systems, the stack each thread need
 
 #### Context switches and overhead
 
-Even though the OS is pretty good at running many threads concurrently context swithces it has quite a bit of overhead, and the same goes for creting new threads which involves some bookkeeping. We could alleviate this slightly by using a threadpool, but it's still not optimal in the typical usecase when we have a huge amount of small tasks which are mostly waiting.
+Even though the OS is pretty good at running many threads concurrently context swithces it has some overhead, but the real cost lies in creting new threads which involves a lot of bookkeeping and setup related to security. We could alleviate this slightly by using a threadpool, but it's still not optimal in the typical usecase when we have a huge amount of small tasks which are mostly waiting.
 
 ### Epoll/Kqueue/IOCP
 
