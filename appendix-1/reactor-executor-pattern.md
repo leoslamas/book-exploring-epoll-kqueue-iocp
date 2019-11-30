@@ -1,10 +1,10 @@
-# Reactor - Executor Pattern
+# The Reactor-Executor Pattern
 
-This pattern is most often referred to as just [Reactor Pattern](https://dzone.com/articles/understanding-reactor-pattern-thread-based-and-eve) is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in english below.
+This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) but in Rust we often use the term Reactor-Executor pattern due to how well this pattern aligns with the `Futures`api. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in english below.
 
-In Rust we often refer to both a `Reactor`and an `Executor`when we talk about it's asynchronous model, the reason for this is that Rusts `Futures`fits nicely in between as the glue that allows these two pieces to work together.
+In Rust we often refer to both a `Reactor`and an `Executor`when we talk about it's asynchronous model. The reason for this is that Rusts `Futures`fits nicely in between as the glue that allows these two pieces to work together.
 
-One huge advantage of this is that this allows us in theory to pick both a `Reactor`and an `Executor`which best suits our problem at hand.
+One huge advantage of this is that this allows us in theory to pick both a `Reactor`and an `Executor`which best suits our problem at hand, though in reality you'll most often use a runtime which provides both for you.
 
 Before we talk more about how this relates to `Futures`lets first have a look at the minimum components this we need.
 
@@ -21,7 +21,7 @@ Before we talk more about how this relates to `Futures`lets first have a look at
 
 ### The Reactor
 
-Our cross platform Epoll/Kqueue/IOCP library can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready and we actually need to recieve the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
+The cross platform Epoll/Kqueue/IOCP library which we implement in this book can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready and we actually need to recieve the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
 
 A very simple `Reactor`can look like this:
 
@@ -40,13 +40,9 @@ impl Reactor {
         let handle = thread::spawn(move || {
             let mut events = Events::with_capacity(1024);
             loop {
-                println!("Waiting! {:?}", poll);
                 match poll.poll(&mut events, Some(200)) {
                     Ok(..) => (),
-                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
-                        println!("INTERRUPTED: {}", e);
-                        break;
-                    }
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => break,
                     Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
                 };
                 for event in &events {
@@ -97,7 +93,6 @@ impl Excutor {
         self.events.push((id, Box::new(f)));
     }
     fn resume(&mut self, event: usize) {
-        println!("RESUMING EVENT: {}", event);
         let (_, f) = self.events
             .iter_mut()
             .find(|(e, _)| *e == event)
@@ -107,7 +102,6 @@ impl Excutor {
     fn block_on_all(&mut self) {
         while let Ok(recieved_token) = self.evt_reciever.recv() {
             assert_eq!(TEST_TOKEN, recieved_token, "Non matching tokens.");
-            println!("EVENT: {} is ready", recieved_token);
             self.resume(recieved_token);
         }
     }
@@ -155,7 +149,6 @@ fn main() {
 
     executor.block_on_all();
     // NB! Best practice is to make sure to join our child thread. We skip it here for brevity.
-    println!("EXITING");
 }
 ```
 
@@ -182,4 +175,8 @@ In addition, Rusts `Futures`provide a `Waker`which should be used to let the `Ex
 
 As a final note. Here we run part of our task on the main thread. Normally, a runtime will let you just `spawn`your task an take care of suspending and resuming it for you.
 {% endhint %}
+
+### Full code example
+
+The full code we go through here is shown in the [Designing our API](../untitled.md) chapter since the code we show here will be the integration test which we'll use to develop our cross platform event queue library.
 

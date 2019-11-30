@@ -14,5 +14,5 @@
 
 * [About the Appendix](appendix-1/about.md)
 * [Bitflags](appendix-1/bitflags.md)
-* [Reactor - Executor Pattern](appendix-1/reactor-executor-pattern.md)
+* [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md)
 
