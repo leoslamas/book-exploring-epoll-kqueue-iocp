@@ -1,6 +1,6 @@
 # Introduction
 
-If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and conciese introduction to all three of them and a practical way to learn how they work and how you can use them.
+If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and concise introduction to all three of them and a practical way to learn how they work and how you can use them.
 
 {% hint style="info" %}
 This book is developed in the open and has two repositories:
@@ -25,7 +25,7 @@ The name `minimio` was chosen because of the similarity with the full fledged li
 
 ### What we'll do
 
-We'll create an extremely simple cross platform library which leverages Epoll on Linux, Kqueue on BSD/Macos and IOCP for Windows to read incoming data from a socket. Our main focus is to introduce the different syscalls and the infrastructure we need to create a workigin event queue.
+We'll create an extremely simple cross platform library which leverages Epoll on Linux, Kqueue on BSD/Macos and IOCP for Windows to read incoming data from a socket. Our main focus is to introduce the different syscalls and the infrastructure we need to create a working event queue.
 
 {% hint style="info" %}
 We'll avoid any external dependencies so we make sure we remove as much "magic" as possible to make sure we really understand the tools we use.
