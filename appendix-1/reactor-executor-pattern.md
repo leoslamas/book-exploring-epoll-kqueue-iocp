@@ -15,7 +15,7 @@ Before we talk more about how this relates to `Futures`lets first have a look at
    1. A Scheduler
    2. A set of suspended tasks
 3. **Tasks**
-   1. The user user code representing a task we have to complete
+   1. The user code representing a task we have to complete
    2. Needs to be interruptable so it can be suspended and yield control to the Executor instead of waiting for I/O.
 
 ### The Reactor
