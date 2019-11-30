@@ -12,6 +12,7 @@
 
 ## Appendix <a id="appendix-1"></a>
 
-* [About](appendix-1/about.md)
+* [About the Appendix](appendix-1/about.md)
 * [Bitflags](appendix-1/bitflags.md)
+* [Reactor - Executor Pattern](appendix-1/reactor-executor-pattern.md)
 
