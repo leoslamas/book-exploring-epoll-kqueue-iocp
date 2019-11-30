@@ -8,7 +8,6 @@
   * [Kqueue](the-recipie-for-an-eventqueue/kqueue.md)
   * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
 * [Designing our API](untitled.md)
-* [Appendix](appendix.md)
 
 ## Appendix <a id="appendix-1"></a>
 
