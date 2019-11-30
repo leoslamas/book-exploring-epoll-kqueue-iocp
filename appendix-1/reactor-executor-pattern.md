@@ -39,6 +39,7 @@ impl Reactor {
         let handle = thread::spawn(move || {
             let mut events = Events::with_capacity(1024);
             loop {
+                // This call will block until an event is ready
                 match poll.poll(&mut events, Some(200)) {
                     Ok(..) => (),
                     Err(ref e) if e.kind() == io::ErrorKind::Interrupted => break,
