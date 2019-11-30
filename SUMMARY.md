@@ -9,5 +9,9 @@
   * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
 * [Designing our API](untitled.md)
 * [Appendix](appendix.md)
-* [Bitflags](bitflags.md)
+
+## Appendix <a id="appendix-1"></a>
+
+* [About](appendix-1/about.md)
+* [Bitflags](appendix-1/bitflags.md)
 
