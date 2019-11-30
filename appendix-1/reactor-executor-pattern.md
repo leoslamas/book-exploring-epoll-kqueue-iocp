@@ -12,12 +12,11 @@ Before we talk more about how this relates to `Futures`lets first have a look at
    1. An event queue
    2. A way to notify the executor of an event
 2. **Executor**
-   1. Scheduler
-   2. Handlers
-3. **Task**
-   1. User code
-   2. Needs to register interest in an event with the Reactor
-   3. Needs to be interruptable so it can be suspended and yield control to the Executor instead of waiting for I/O.
+   1. A Scheduler
+   2. A set of suspended tasks
+3. **Tasks**
+   1. The user user code representing a task we have to complete
+   2. Needs to be interruptable so it can be suspended and yield control to the Executor instead of waiting for I/O.
 
 ### The Reactor
 
@@ -117,7 +116,7 @@ There is of course many ways which we could choose to handle this, feel free to 
 
 In rust libraries like `Tokio`or `async_std`takes on the role as Executors. Generally a `Reactor`and an `Executor`will be provided together in a runtime so you won't have to actually call different methods on the `Executor`and `Reactor`like we do here and instead leave that to the runtime you choose. 
 
-However, there is nothing in Rusts standard library or language which prevents you to choose an `Reactor`and an `Executor`based on what suits your needs best.
+However, there is nothing in Rusts standard library or language which prevents you to choose an `Reactor`and an `Executor`based on your needs.
 {% endhint %}
 
 ### Task
