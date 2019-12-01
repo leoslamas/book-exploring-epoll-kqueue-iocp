@@ -298,7 +298,7 @@ impl Excutor {
 }
 ```
 
-Output:
+Output \(on my Windows machine\):
 
 ```text
 Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
