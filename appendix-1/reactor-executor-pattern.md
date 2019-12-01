@@ -152,7 +152,7 @@ fn main() {
 }
 ```
 
-There are a few things to note here. First of all the `TcpStream`is provided to use by our `Reactor`and is not the one in the standard library. Sencondly you'll see that we have only implemented methods for `stream_read`and not for `Write`. If we had to write all our async code like this it wouldn't be very ergonomic. Thats why we use runtimes which does a lot of this for us, like closing down our `Poll`loop, releasing resources and joining threads.
+There are a few things to note here. First of all the `TcpStream`is provided to us by our `Reactor`and is not the one in the standard library. Sencondly you'll see that we have only implemented methods for `Read`and not for `Write`. If we had to write all our async code like this it wouldn't be very ergonomic. Thats why we use runtimes which does a lot of this for us, like closing down our `Poll`loop, releasing resources and joining threads.
 
 **Lets go through the steps we take here:**
 
@@ -161,7 +161,7 @@ There are a few things to note here. First of all the `TcpStream`is provided to 
 3. We open a socket and write a request \(to a slow endpoint wich will wait 1000ms before responding\)
 4. We register a `Read`intrerest on that socket with our `Reactor`
 5. We register a handle function with our `Executor`to be run once data is ready
-6. We stop the `Poll`loop manually in our handle \(we only have one task\)
+6. We stop the `Poll`loop manually in our handler function \(we only have one task\)
 7. We run our `Executor`and block until all tasks are finished
 
 {% hint style="info" %}
@@ -173,7 +173,7 @@ To accomplish this we use a callback based approach. In Rust, we'd normally use 
 
 In addition, Rusts `Futures`provide a `Waker`which should be used to let the `Executor`know that a task can be woken up and resumed. In our example we have a tight coupling between the executor and reactor through the use of a regular `Channel`as a way to communicate. With `Futures`the executor and reactor can be totally decoupled.
 
-As a final note. Here we run part of our task on the main thread. Normally, a runtime will let you just `spawn`your task an take care of suspending and resuming it for you.
+As a final note. We run part of our task on the main thread. Normally, a runtime will let you just `spawn`your task an take care of suspending and resuming it for you.
 {% endhint %}
 
 ### Full code example
@@ -193,7 +193,7 @@ In `Cargo.toml`add this dependency
 minimio={git="https://github.com/cfsamson/examples-minimio"}
 ```
 
-In `main.rs`replace what's there with the code from this chapter. I added a few more `print`statements ad feel free to add more yourself and play around with the code:
+In `main.rs`replace what's there with the code from this chapter. I added a few more `print`statements to see some output. Feel free to add more yourself and play around with the code:
 
 ```rust
 use minimio::{Events, Interests, Poll, Registrator, TcpStream};
@@ -281,7 +281,7 @@ impl Excutor {
         self.events.push((id, Box::new(f)));
     }
     fn resume(&mut self, event: usize) {
-        println!("RESUMING EVENT: {}", event);
+        println!("RESUMING TASK: {}", event);
         let (_, f) = self.events
             .iter_mut()
             .find(|(e, _)| *e == event)
@@ -296,5 +296,29 @@ impl Excutor {
         }
     }
 }
+```
+
+Output:
+
+```text
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+Waiting! Poll { registry: Registry { selector: Selector { completion_port: 164 } }, is_poll_dead: false }
+EVENT: 10 is ready
+RESUMING TASK: 10
+HTTP/1.1 302 Found
+Server: CowbHTTP/1.1 302 Found
+Server: CowbHTTP/1.1 302 Found
+Server: Cowboy
+[...rest of response data...]
+
+
+INTERRUPTED: Poll closed.
+EXITING
 ```
 
