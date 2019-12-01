@@ -15,7 +15,7 @@ Let's say you have 8 different choises a user can can set. For our example let's
 7. Parma ham
 8. Basil
 
-We can set any combination of these flags, even none. A very efficient way of representing these choises is using an `u8`. There are 2^8 different combinations \(256 combinations possible using these 8 toppings\).
+We can set any combination of these flags, or none. A very kekory efficient way of representing these choises is using an `u8`. There are 2^8 different combinations \(256 combinations possible using these 8 toppings\).
 
 **We could represent this using a `u8`in two ways:**
 
@@ -24,11 +24,11 @@ We can set any combination of these flags, even none. A very efficient way of re
 
 While both are possible, a chef might want to first know what kind of cheese the customer wants. Now in the first case it would be 8 possible \(unique\) numbers that would signify that for example Mozzarella is chosen.
 
-In the second alternative the chef needs only to check if the first bit is 1 or 0. 
+In the second alternative the chef only needs to check if the first bit is 1 or 0. 
 
 The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choises. Thats why using bitflags are popular.
 
-Here are some examples using bitflags:
+**Here are some examples using bitflags:**
 
 | Toppings | Bitflag |
 | :--- | :--- |
