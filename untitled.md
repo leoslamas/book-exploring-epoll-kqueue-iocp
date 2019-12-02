@@ -107,12 +107,10 @@ impl Reactor {
                 println!("Waiting! {:?}", poll);
                 match poll.poll(&mut events, Some(200)) {
                     Ok(..) => (),
-                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
-                        println!("INTERRUPTED: {}", e);
-                        break;
-                    }
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => break,
                     Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
                 };
+                
                 for event in &events {
                     let event_token = event.id().value();
                     evt_sender.send(event_token).expect("Send event_token err.");
@@ -128,21 +126,13 @@ impl Reactor {
         registrator.register(stream, token, Interests::READABLE).expect("Registration err.");
     }
 
-    fn take_registrator(&mut self) -> Registrator {
+    fn registrator(&mut self) -> Registrator {
         self.registrator.take().unwrap()
-    }
-}
-
-impl Drop for Reactor {
-    fn drop(&mut self) {
-        let handle = self.handle.take().unwrap();
-        handle.join().unwrap();
-        println!("Reactor thread exited successfully");
     }
 }
 ```
 
-The really interesting parts of this code is this:
+**The really interesting parts of this code is these lines:**
 
 ```rust
 let mut poll = Poll::new().unwrap();
@@ -153,7 +143,7 @@ Here we create our event queue by creating a new `Poll`and we get a `Registrator
 
 We want to block and wait for events in a seperate thread so we spawn a new thread and write the following code to be executed on that thread.
 
-First we create a collection of `Events`:
+**First we create a collection of `Events`:**
 
 ```rust
 let mut events = Events::with_capacity(1024);
@@ -167,10 +157,7 @@ Next up is the actual blocking call where we wait for events.
 match poll.poll(&mut events, Some(200)) {
     Ok(..) => (),
     
-    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
-        println!("INTERRUPTED: {}", e);
-        break;
-    }
+    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => break,
     
     Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
     };
@@ -179,7 +166,11 @@ match poll.poll(&mut events, Some(200)) {
 Here we pass in a reference to our event collection and a timeout of 200 ms. The call to `poll`returns a `io::Result`. If the `Error`is of `io::ErrorKind::Interrupted`we close down the loop. Any other error causes a `Panic`.
 
 {% hint style="info" %}
-Here I did take another shortcut, instead of implementing our own `Error`type which would return an error indicating the `Poll`instance has been sent a `Close`signal, I used `io::ErrorKind::Interrupted`instead. This is to keep our code as short as possible and `Interrupted`is after all somewhat descriptive.
+`poll`returns a result back to us. We `match`on the `Result`of `poll` since we want to catch any errors there. The most important part here is that we use the `ErrorKind::Interrupted`as a way to signal to our eventloop that we have sent a `close`signal. 
+
+If we don't do this we have no way of shutting the eventloop down \(my first implementation blatantly disregarded this which is a problem if you want to shut your threads down properly\).
+
+I used `io::ErrorKind::Interrupted` to indicate that we have recived a signal to close down the loop instead of implementing a type to represent this state. This is to keep our code as short as possible and `Interrupted`is after all somewhat descriptive.
 {% endhint %}
 
 The last part of our `Poll`thread is to actually go through the events we got \(if any\) and comminucate to the `Executor`that a certain task is ready to make progress.
@@ -191,7 +182,7 @@ for event in &events {
 }
 ```
 
-The next bit is how we register events. To do that we need to move out of our `Reactor`and write the main body of our test:
+The last important part is how we register interest in events to our event queue. To do that we need to leave our `Reactor`and write the main body of our test:
 
 ```rust
 #[test]
@@ -205,7 +196,7 @@ fn proposed_api() {
 
     stream.write_all(request).expect("Stream write err.");
 
-    let registrator = reactor.take_registrator();
+    let registrator = reactor.registrator();
     registrator.register(&mut stream, TEST_TOKEN, Interests::READABLE).expect("registration err.");
     
     executor.suspend(TEST_TOKEN, move || {
@@ -216,164 +207,137 @@ fn proposed_api() {
     });
 
     executor.block_on_all();
-    println!("EXITING");
 }
 ```
 
-The interesting lines here are:
+**The interesting lines here are:**
 
 ```rust
 let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
-let registrator = reactor.take_registrator();
+let registrator = reactor.registrator();
 registrator.register(&mut stream, TEST_TOKEN, Interests::READABLE).expect("...");
 registrator.close_loop().expect("close loop err.");
 ```
 
+First we use our own implementation of a `TcpStream` to open a socket. Next we get a `Registrator`by calling `Reactor::registrator()`. This registrator should be able to live in a different thread from our `Poll`instance. 
 
+To register interest in an event on the `TcpStream`we call `Registrator::register()`and pass in an exclusive reference to our `TcpStream`, a token which identifies this exact event and a flag indicating what kind of event we're interested in on that socket.
 
-The `Poll` instance and the `registrator`is what we really want to test. These two together provides all we really need to handle our event queue. The `Poll`instance handles waiting for events and returning information on an event we're waiting for. The `registrator`let's us register interest in new events. The rest is really "plumbing" we need to test this in a realistic scenario.
+Lastly we close our loop. Our example is a bit contrived in the way that we actually call our `Registrator`inside our first task and close the loop immidiately. However, for our test this an easy way to test what we want to accomplish.
 
 {% hint style="info" %}
-We're assuming that the normal use case here is that we keep the registrator on one thread and send `Poll`of to a different thread where it will wait for events to occur. Of curse this need not be the case but it's important for us that we consider this use case in pur design from the start.
-{% endhint %}
+#### **Some tips if you're implementing your own event queue**
 
-The next thing we do is to create a channel to send events from our `eventqueue`thread to our main thread which will act on the event that occurred. We also need a runtime to store a list of events we are waiting for and the logic we want to run when the event is ready.
-
-```rust
-let (evt_sender, evt_reciever) = channel();
-let mut rt = Runtime { events: vec![] };
-let test_token = 10;
-```
-
-Don't worry, we'll have a look at what `Runtime`is in the end. The `test_token`variable is a token we'll use to identify our event. We'll use a usize as a `Token`throughout this book.
-
-The next step is to set up a simple event queue, and we do this in a different thread so we can block there while we wait for our main thread to register an event to the queue.
-
-```rust
-let handle = thread::spawn(move || {
-    let mut events = Events::with_capacity(1024);
-    loop {
-        match poll.poll(&mut events, Some(200)) {
-            Ok(..) => (),
-            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
-                break;
-            }
-            Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
-        };
-        for event in &events {
-            let event_token = event.id().value();
-
-            evt_sender.send(event_token).expect("send event_token err.");
-        }
-    }
-});
-```
-
-After we've spawned a new thread we want that thread to first create a list of "empty" event structs we'll send off to the OS and get back populated with information about any events that have happened.
-
-Next we enter into a `loop`which will block on `poll.poll(&mut events, Some(200))` until an event has happened. We pass in the zeroed list of events and set a timeout of `200`milliseconds.
-
-We get an result back. It's important to note that the events are now placed in the `events`list and not returned. We `match`on the `Result`of `poll` since we want to catch any errors there. The most important part here is that we use the `ErrorKind::Interrupted`as a way to signal to our eventloop that we have sent a `close`signal. 
-
-If we don't do this we have no way of shutting the eventloop down \(my first implementation blatantly disregarded this which is a problem if you want to shut your threds down properly\).
-
-Next, we go through the list of events that has happened and get the `token`. We use the channel we set up earlier to signal to our main thread that event with id x is ready.
-
-Now we need to do something we can wait on. We create a web `GET`request to a very slow server and register interest in getting a notice when a "read" event is ready for us.
-
-```rust
-let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
-let request = "GET /delay/1000/url/http://www.google.com HTTP/1.1\r\n\
-               Host: slowwly.robertomurray.co.uk\r\n\
-               Connection: close\r\n\
-               \r\n";
-stream
-    .write_all(request.as_bytes())
-    .expect("Error writing to stream");
-
-registrator
-    .register(&mut stream, test_token, Interests::readable())
-    .expect("registration err.");
-```
-
-There is one important thing to note here. First I thought I could use the standard `std::net::TcpStream`here. And that worked well enough when implementing the readiness based models `Epoll and Kqueue`, but once you start implementing `IOCP`you realize that you have a problem!
+First I thought I could use the standard `std::net::TcpStream`here. And that worked well enough when implementing the readiness based models `Epoll and Kqueue`, but once you start implementing `IOCP`you realize that you have a problem!
 
 How can you handle the fact that `Kqueue/Epoll`alerts you when data **is ready to be read** while `IOCP`alerts you when data **has been read**? At some point you either need to abstract over this implementation detail, or you have to let the user handle the fact that they're dealing with two platform dependant implementations...
 
-The answer is that we can't have the user care about this. We need to abstract over something so they don't have to worry about this. 
+It was a little bit annoying to figure this out when I thought I had a design that worked for two platforms and already had a working API for them. It required a substantial rewrite to work with `IOCP`, but hey, if you're reading this at least you can learn from my mistake.
 
-{% hint style="info" %}
-Yes, it was a little bit annoying to figure this out when I thought I had a design that worked for two platforms. It required a substantial rewrite to work with `IOCP`, but hey, if you're reading this at least you can learn from my mistake.
-
-My recommendation is to actually start the other way around, figure out a design that works for `IOCP`and fit the readiness based solutions into working with that API. It's easier than to start with the readiness based ones an try to fit IOCP into that model.
+My recommendation is to actually start the other way around from what I did, figure out a design that works for `IOCP`and fit the readiness based solutions into working with that API. It's easier than to start with the readiness based ones an try to fit IOCP into that model.
 {% endhint %}
 
-We choose to abstract over the difference between the readiness based models and the completion based model by providing our own `TcpStream`struct which you need to use with this library. This is the same as for example `mio`does so at least we're in good company.
+### The full code
 
-We use our `registrator`to register an interest in `read`events on this `TcpStream`. In addition we choos an API where we explicitly pass in an **unique** token to identify this event. Note that this places a burden on the user of this API to ensure the uniqueness of this token. We could do that for them, but we chose not to do that in our library.
-
-The last step is to actually wait in our main thread for the event to happen.
+The code in this test is explained in the Appendix: The Reactor-Executor Pattern. The test has some minor changes in that we take care to join all threads before we exit and we remove all print statements. In addition we actually seperate the `Reactor`and the `Registrator`and actually send them to different threads in the test so we take care to cover all our requirements.
 
 ```rust
-rt.spawn(test_token, move || {
-    let mut buffer = String::new();
-    stream.read_to_string(&mut buffer).unwrap();
-    assert!(!buffer.is_empty(), "Got an empty buffer");
-});
+use minimio::{Events, Interests, Poll, Registrator, TcpStream};
+use std::{io, io::Read, io::Write, thread, thread::JoinHandle};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
-while let Ok(recieved_token) = evt_reciever.recv() {
-    assert_eq!(test_token, recieved_token, "Non matching tokens.");
-    rt.run(recieved_token); 
-    
-    // let's close the event loop since we know we only have 1 event
-    registrator.close_loop().expect("close loop err.");
+const TEST_TOKEN: usize = 10; // Hard coded for this test only
+
+#[test]
+fn proposed_api() {
+    let (evt_sender, evt_reciever) = channel();
+    let mut reactor = Reactor::new(evt_sender);
+    let mut executor = Excutor::new(evt_reciever);
+
+    let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
+    let request = b"GET /delay/1000/url/http://www.google.com HTTP/1.1\r\nHost: slowwly.robertomurray.co.uk\r\nConnection: close\r\n\r\n";
+
+    stream.write_all(request).expect("Stream write err.");
+
+    let registrator = reactor.registrator();
+    registrator.register(&mut stream, TEST_TOKEN, Interests::READABLE).expect("registration err.");
+
+    executor.suspend(TEST_TOKEN, move || {
+        let mut buffer = String::new();
+        stream.read_to_string(&mut buffer).unwrap();
+        assert!(!buffer.is_empty(), "Got an empty buffer");
+        registrator.close_loop().expect("close loop err.");
+    });
+
+    executor.block_on_all();
 }
 
-handle.join().expect("error joining thread");
-```
-
-We do this by first registering a callback which we will run once we've gotten a notice that our event is ready. We simply move the `TcpStream`over to this closure and read from it and asserts that we actually got some data. We also give the callback the same unique id as the `token`we registered with the event queue.
-
-The next step is to listen on our channel for incoming messages. Our `eventqueue`thread will send a token to us to identify the event that occurred to us when it's ready.
-
-We assert that the token we recieved is the same as our `test_token`which had a value of `10`. Next we run the callback we registered with that id.
-
-We then register a `close`event using `registrator.close_loop().expect("close loop err.");`. This will cause our `eventqueue`thread to close and we'll get an `Err`value on our channel, which will cause us to break out of the loop.
-
-Finally we join the thread as a good practice making sure that all destructors are run before we exit our process.
-
-Now, this is actually the blueprint of our design. The next chapters will cover how to actually getting this to work.
-
-### Bonus section
-
-While not required, I'll also quickly explain how we set up our very simple runtime:
-
-```rust
-struct Runtime {
-    events: Vec<(usize, Box<dyn FnMut()>)>,
+struct Reactor {
+    handle: Option<JoinHandle<()>>,
+    registrator: Option<Registrator>,
 }
 
-impl Runtime {
-    fn spawn(&mut self, id: usize, f: impl FnMut() + 'static) {
-        self.events.push((id, Box::new(f)));
+impl Reactor {
+    fn new(evt_sender: Sender<usize>) -> Reactor {
+        let mut poll = Poll::new().unwrap();
+        let registrator = poll.registrator();
+
+        // Set up the epoll/IOCP event loop in a seperate thread
+        let handle = thread::spawn(move || {
+            let mut events = Events::with_capacity(1024);
+            loop {
+                match poll.poll(&mut events, Some(200)) {
+                    Ok(..) => (),
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => break,
+                    Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
+                };
+                for event in &events {
+                    let event_token = event.id().value();
+                    evt_sender.send(event_token).expect("send event_token err.");
+                }
+            }
+        });
+
+        Reactor { handle: Some(handle), registrator: Some(registrator) }
     }
 
-    fn run(&mut self, event: usize) {
-        let (_, f) = self
-            .events
+    fn registrator(&mut self) -> Registrator {
+        self.registrator.take().unwrap()
+    }
+}
+
+impl Drop for Reactor {
+    fn drop(&mut self) {
+        let handle = self.handle.take().unwrap();
+        handle.join().unwrap();
+    }
+}
+
+struct Excutor {
+    events: Vec<(usize, Box<dyn FnMut()>)>,
+    evt_reciever: Receiver<usize>,
+}
+
+impl Excutor {
+    fn new(evt_reciever: Receiver<usize>) -> Self {
+        Excutor { events: vec![], evt_reciever }
+    }
+    fn suspend(&mut self, id: usize, f: impl FnMut() + 'static) {
+        self.events.push((id, Box::new(f)));
+    }
+    fn resume(&mut self, event: usize) {
+        let (_, f) = self.events
             .iter_mut()
             .find(|(e, _)| *e == event)
             .expect("Couldn't find event.");
         f();
     }
+    fn block_on_all(&mut self) {
+        while let Ok(recieved_token) = self.evt_reciever.recv() {
+            assert_eq!(TEST_TOKEN, recieved_token, "Non matching tokens.");
+            self.resume(recieved_token);
+        }
+    }
 }
 ```
-
-As you see, this is a very simple runtime. The backing structure is a `Vec<usize, Box<dyn FnMut()>)>`which is an array with a tuple of `usize`which is the Id of the callback and a Boxed closure which is the actual callback we register.
-
-The `Runtime`has two methods. `spawn`takes an unique id and a closure. We simply store both the id and the closure so we can find the exact closure and run it later.
-
-The last function is `run`which takes an id as argument which identifies which callback to run. We use `iter_mut`and `find`to mutably iterate over the callbacks and find the one with an id equal to the `id`we passed in. 
-
-Since `find`returns an `Option`we unwrap it here so we either `panic`or get the value. Since we are iterating over tuples of `(usize, Box<dyn FnMut()>)`we dicard the `usize`value and assign the closure we found to `f`using `let (_, f)`and finally we invoke the callback we had stored by calling `f();`.
 
