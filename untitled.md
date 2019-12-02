@@ -14,13 +14,9 @@ cargo init --lib
 
 The first think I like to do when I know roughly what API  I want to use is to start a new project by defining roughly the API I want to use. 
 
-{% hint style="info" %}
-Trust me. The test didn't look exactly like this when I started, but it looked something similar to this. Then I changed it when I realized different limitations or problems with my first API design until I landed on the version I present here. The big advantage of doing it this way is that you have a test you can run once finished to test how the implemenation works in a "real" scenario.
-{% endhint %}
-
 For now we only want to cover one use case and that is to provide a event queue we can use in our [examples-node-eventloop](https://github.com/cfsamson/examples-node-eventloop). Now, whether you've read my prevoius book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.
 
-As a big inspiration in implementing the API I've looked into how [mio ](https://github.com/tokio-rs/mio)does it but for convenience I've made some compromizes to simplify our code a little bit.
+I've looked into how [mio ](https://github.com/tokio-rs/mio)API as an inspiration but for convenience I've made some compromizes to simplify our code to fit an example.
 
 {% hint style="info" %}
 Reacently, `mio` changed from using IOCP as the backing API on Windows and started using WePoll instead simplifying their implementation greatly. I'll cover WePoll shortly in the end of this book, but for now, just know that I've used [mio v0.6.x](https://github.com/tokio-rs/mio/tree/v0.6.x) version as the inspiration for the code we use in this book for this exact reason so if you go to dive into the source code, make sure to switch to the `v0.6.x`branch.
@@ -40,7 +36,50 @@ minimio
    |      |--> api.rs
 ```
 
-Now open `api.rs`and let's start desiging how we want our API to work:
+Now open `api.rs`and let's start desiging how we want our API to work.
+
+**We have some requirements:**
+
+1. We want to be able to block the current thread while we wait for events
+2. We want the same API across operating systems
+3. We want to be able to register interest from a different thread than we run the main loop on
+
+Ok, so before we dive into the code, let's consider what we can immideately derive from these requirements.
+
+### Blocking the current thread
+
+We need an interface we can use which provides a way for us to block the current thread while waiting for events to be ready. We also need something that identifies an event so we know which one finished in what order. We need to be able to send a signal to stop waiting in \(1\) and exit from the blocking call or else our program would never exit \(if the event queue is run on our main thread\) or end i a "bad" way if we run it in a child thread.
+
+* We'll call the structure providing a blocking method `Poll`
+* We'll call the thing which identifies an event a `Token` \(which will simply be a `usize`in this case\)
+* We'll need a structure representing an `Event`
+
+### Same API for all platforms
+
+This is a difficult one. And it's very difficult to decide on in advance before actually digging into the details of both Epoll, Kqueue and IOCP. We know that IOCP requires us to provide a buffer which is filled with data but Epoll and Kqueue let's us know when data is ready to read. At least we can derive from that tha we need to hook into whatever method the user calls for retrieving data. It seems impossible for us to provide any abstration lower than that.
+
+Once we realize that we also realize that using `std::net::TcpStream`is out of the question, but we can implement our own `TcpStream`where we "hijack" the `Read`methods \(and `Write`methods if we implemented those as well\). This way we can use `std::net::TcpStream`under the hood but implement our own `Read`implementation.
+
+* We need to provide a `TcpStream`
+* We need something to represent what kind of event we're interested in. We'll call that `Interests`
+
+### Register interest from a different thread
+
+So we want the user to be able to register interest from one thread and block while waiting for events on another thread. That means we need some way of having a basic synchonization to know that our `Poll`instance is actually waiting for events and that we have created an event queue.
+
+It's apparent that this structure will be closely tied to our event queue. There are many ways to solve this but let's just start with a name and an idea of how it should work.
+
+* We need a `Registrator`which knows if our event queue is alive and can be sent to another thread.
+
+### The integration test
+
+So we have a rough idea about our API now so let's start scetching out a test. We'll divide this into smaller unit tests later but test against this to know when we've reached our goal for now.
+
+Lets start with the imports we know we need from our library:
+
+```rust
+use minimio::{Events, Interests, Poll, Registrator, TcpStream};
+```
 
 ```rust
 #[test]
