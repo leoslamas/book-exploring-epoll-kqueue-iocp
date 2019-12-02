@@ -50,7 +50,7 @@ Ok, so before we dive into the code, let's consider what we can immideately deri
 
 We need an interface we can use which provides a way for us to block the current thread while waiting for events to be ready. We also need something that identifies an event so we know which one finished in what order. We need to be able to send a signal to stop waiting in \(1\) and exit from the blocking call or else our program would never exit \(if the event queue is run on our main thread\) or end i a "bad" way if we run it in a child thread.
 
-* We'll call the structure providing a blocking method `Poll`
+* We'll call the structure providing a blocking method. Inpsired by `mio` we call our main event queue instance `Poll`, and the blocking method `poll()`
 * We'll call the thing which identifies an event a `Token` \(which will simply be a `usize`in this case\)
 * We'll need a structure representing an `Event`
 
@@ -81,18 +81,155 @@ Lets start with the imports we know we need from our library:
 use minimio::{Events, Interests, Poll, Registrator, TcpStream};
 ```
 
+The first thing we want to do is to consider how we want to use our API. Now, to actually create an integration test which tests something usefull we need some plumbing. More specifically we're going to use a `Reactor`and an `Executor`to create a task, suspend it, wait for a `READABLE`event and then resume and finish our task.
+
+{% hint style="info" %}
+The pattern we use here is described in the Appendix chapter [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md) for an explanation of this pattern and a more thorough explanation of our integration I recommend that you check out that chapter.
+{% endhint %}
+
+Our library will be used in the `Reactor`so let's focus on that specific part of the code first.
+
+```rust
+struct Reactor {
+    handle: Option<JoinHandle<()>>,
+    registrator: Option<Registrator>,
+}
+
+impl Reactor {
+    fn new(evt_sender: Sender<usize>) -> Reactor {
+        let mut poll = Poll::new().unwrap();
+        let registrator = poll.registrator();
+
+        // Set up the epoll/IOCP event loop in a seperate thread
+        let handle = thread::spawn(move || {
+            let mut events = Events::with_capacity(1024);
+            loop {
+                println!("Waiting! {:?}", poll);
+                match poll.poll(&mut events, Some(200)) {
+                    Ok(..) => (),
+                    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
+                        println!("INTERRUPTED: {}", e);
+                        break;
+                    }
+                    Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
+                };
+                for event in &events {
+                    let event_token = event.id().value();
+                    evt_sender.send(event_token).expect("Send event_token err.");
+                }
+            }
+        });
+
+        Reactor { handle: Some(handle), registrator: Some(registrator) }
+    }
+
+    fn register_stream_read_interest(&self, stream: &mut TcpStream, token: usize) {
+        let registrator = self.registrator.as_ref().unwrap();
+        registrator.register(stream, token, Interests::READABLE).expect("Registration err.");
+    }
+
+    fn take_registrator(&mut self) -> Registrator {
+        self.registrator.take().unwrap()
+    }
+}
+
+impl Drop for Reactor {
+    fn drop(&mut self) {
+        let handle = self.handle.take().unwrap();
+        handle.join().unwrap();
+        println!("Reactor thread exited successfully");
+    }
+}
+```
+
+The really interesting parts of this code is this:
+
+```rust
+let mut poll = Poll::new().unwrap();
+let registrator = poll.registrator();
+```
+
+Here we create our event queue by creating a new `Poll`and we get a `Registrator`by calling `poll.registrator()`which we'll use to register interest in events. The registrator is designed to be held in a seperate thread from the `Poll`instance.
+
+We want to block and wait for events in a seperate thread so we spawn a new thread and write the following code to be executed on that thread.
+
+First we create a collection of `Events`:
+
+```rust
+let mut events = Events::with_capacity(1024);
+```
+
+The reason for creating the collection here is mainly because it aligns well with how all three operating sysmtes returns events and it's again heavily inspired by how `mio`does this as well. 
+
+Next up is the actual blocking call where we wait for events.
+
+```rust
+match poll.poll(&mut events, Some(200)) {
+    Ok(..) => (),
+    
+    Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {
+        println!("INTERRUPTED: {}", e);
+        break;
+    }
+    
+    Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
+    };
+```
+
+Here we pass in a reference to our event collection and a timeout of 200 ms. The call to `poll`returns a `io::Result`. If the `Error`is of `io::ErrorKind::Interrupted`we close down the loop. Any other error causes a `Panic`.
+
+{% hint style="info" %}
+Here I did take another shortcut, instead of implementing our own `Error`type which would return an error indicating the `Poll`instance has been sent a `Close`signal, I used `io::ErrorKind::Interrupted`instead. This is to keep our code as short as possible and `Interrupted`is after all somewhat descriptive.
+{% endhint %}
+
+The last part of our `Poll`thread is to actually go through the events we got \(if any\) and comminucate to the `Executor`that a certain task is ready to make progress.
+
+```rust
+for event in &events {
+    let event_token = event.id().value();
+    evt_sender.send(event_token).expect("send event_token err.");
+}
+```
+
+The next bit is how we register events. To do that we need to move out of our `Reactor`and write the main body of our test:
+
 ```rust
 #[test]
 fn proposed_api() {
-    let mut poll = Poll::new().unwrap();
-    let registrator = poll.registrator();
+    let (evt_sender, evt_reciever) = channel();
+    let mut reactor = Reactor::new(evt_sender);
+    let mut executor = Excutor::new(evt_reciever);
+
+    let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
+    let request = b"GET /delay/1000/url/http://www.google.com HTTP/1.1\r\nHost: slowwly.robertomurray.co.uk\r\nConnection: close\r\n\r\n";
+
+    stream.write_all(request).expect("Stream write err.");
+
+    let registrator = reactor.take_registrator();
+    registrator.register(&mut stream, TEST_TOKEN, Interests::READABLE).expect("registration err.");
+    
+    executor.suspend(TEST_TOKEN, move || {
+        let mut buffer = String::new();
+        stream.read_to_string(&mut buffer).unwrap();
+        assert!(!buffer.is_empty(), "Got an empty buffer");
+        registrator.close_loop().expect("close loop err.");
+    });
+
+    executor.block_on_all();
+    println!("EXITING");
+}
 ```
 
-The first thing we do is to create a test function and use the `#[test]`attribute so Cargo will notice this as a test we want to run.
+The interesting lines here are:
 
-Inpsired by `mio` we call our main eventqueue instance `Poll`. We know that setting up a `Poll`can fail since we're going to have to ask the OS to actually create a queue for us.
+```rust
+let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
+let registrator = reactor.take_registrator();
+registrator.register(&mut stream, TEST_TOKEN, Interests::READABLE).expect("...");
+registrator.close_loop().expect("close loop err.");
+```
 
-The next important part is the `registrator`. Now this is what actually allows us to register events to the event queue.
+
 
 The `Poll` instance and the `registrator`is what we really want to test. These two together provides all we really need to handle our event queue. The `Poll`instance handles waiting for events and returning information on an event we're waiting for. The `registrator`let's us register interest in new events. The rest is really "plumbing" we need to test this in a realistic scenario.
 
