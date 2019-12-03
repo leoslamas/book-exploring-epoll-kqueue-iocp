@@ -54,7 +54,7 @@ We need an interface we can use which provides a way for us to block the current
 * We'll call the thing which identifies an event a `Token` \(which will simply be a `usize`in this case\)
 * We'll need a structure representing an `Event`
 
-### Same API for all platforms
+### One API for all platforms
 
 This is a difficult one. And it's very difficult to decide on in advance before actually digging into the details of both Epoll, Kqueue and IOCP. We know that IOCP requires us to provide a buffer which is filled with data but Epoll and Kqueue let's us know when data is ready to read. At least we can derive from that tha we need to hook into whatever method the user calls for retrieving data. It seems impossible for us to provide any abstration lower than that.
 
