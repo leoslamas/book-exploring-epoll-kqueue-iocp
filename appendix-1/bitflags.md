@@ -2,7 +2,7 @@
 
 Bitflags are commonly used as a conventient way of providing users of a library a set of options they can set. When using options that can either be enabled or disabled we refer to this as setting a `flag`. 
 
-Bitflags are also very space-efficient to use since each bit is treated as an option. Manipulating and interpreting these flags uses some of the most basic and optimized instructions of the CPU which makes working with them very fast as well.
+Bitflags are also very space-efficient to use since each bit is treated as an option. Manipulating and interpreting these flags uses some of the most basic and optimized instructions on the CPU which makes working with them very fast as well.
 
 ### Bitflags by example
 
