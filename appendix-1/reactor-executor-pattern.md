@@ -1,6 +1,6 @@
 # The Reactor-Executor Pattern
 
-This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) and it's especially relevant in Rust due to how well this pattern aligns with the `Futures`api. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in english below.
+This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) and it's especially relevant in Rust due to how well this pattern aligns with the `Futures`api. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in English below.
 
 In Rust we often refer to both a `Reactor`and an `Executor`when we talk about its asynchronous model. The reason for this is that `Futures`in Rust fits nicely in between as the glue that allows these two pieces to work together.
 
