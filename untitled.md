@@ -29,11 +29,12 @@ In Rust, it's common to have unit tests in the same file as code. Integration te
 ```text
 minimio
    |
-   |--> src
-   |     |--> lib.rs
-   |
-   |--> tests
-   |      |--> api.rs
+   +--> src
+   |     |
+   |     +--> lib.rs
+   +--> tests
+   |      |
+   |      +--> api.rs
 ```
 
 Now open `api.rs`and let's start desiging how we want our API to work.
