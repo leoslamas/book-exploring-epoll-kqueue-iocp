@@ -1,10 +1,12 @@
 # Bitflags
 
-Bitflags are commonly used as a conventient way of providing users of an api a set of options they can set. We call this setting a `flag`.
+Bitflags are commonly used as a conventient way of providing users of a library a set of options they can set. When using options that can either be enabled or disabled we refer to this as setting a `flag`. 
+
+Bitflags are also very space-efficient to use since each bit is treated as an option. Manipulating and interpreting these flags uses some of the most basic and optimized instructions of the CPU which makes working with them very fast as well.
 
 ### Bitflags by example
 
-Let's say you have 8 different choises a user can can set. For our example let's say it's a set of toppings on a pizza:
+Let's say you have 8 different choices a user can can set. For our example let's say it's a set of toppings on a pizza:
 
 1. Mozzarella
 2. Peccorino
@@ -15,18 +17,18 @@ Let's say you have 8 different choises a user can can set. For our example let's
 7. Parma ham
 8. Basil
 
-We can set any combination of these flags, or none. A very kekory efficient way of representing these choises is using an `u8`. There are 2^8 different combinations \(256 combinations possible using these 8 toppings\).
+We can set any combination of these flags, or none. A very kekory efficient way of representing these choices is using an `u8`. There are 2^8 different combinations \(256 combinations possible using these 8 toppings\).
 
 **We could represent this using a `u8`in two ways:**
 
-1. Assiging each possible combination a unique value from 0-255.
+1. Assigning each possible combination a unique value from 0-255.
 2. Using the bits in the `u8`as a flag to indicate if a topping is choosing or not
 
 While both are possible, a chef might want to first know what kind of cheese the customer wants. Now in the first case it would be 8 possible \(unique\) numbers that would signify that for example Mozzarella is chosen.
 
 In the second alternative the chef only needs to check if the first bit is 1 or 0. 
 
-The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choises. Thats why using bitflags are popular.
+The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choices. Thats why using bitflags are popular.
 
 **Here are some examples using bitflags:**
 
