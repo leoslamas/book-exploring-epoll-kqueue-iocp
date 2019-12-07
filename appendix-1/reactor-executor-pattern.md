@@ -1,12 +1,12 @@
 # The Reactor-Executor Pattern
 
-This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) and it's epecially relevant in Rust due to how well this pattern aligns with the `Futures`api. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in english below.
+This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) and it's especially relevant in Rust due to how well this pattern aligns with the `Futures`api. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in english below.
 
-In Rust we often refer to both a `Reactor`and an `Executor`when we talk about it's asynchronous model. The reason for this is that Rusts `Futures`fits nicely in between as the glue that allows these two pieces to work together.
+In Rust we often refer to both a `Reactor`and an `Executor`when we talk about its asynchronous model. The reason for this is that `Futures`in Rust fits nicely in between as the glue that allows these two pieces to work together.
 
 One huge advantage of this is that this allows us in theory to pick both a `Reactor`and an `Executor`which best suits our problem at hand, though in reality you'll most often use a runtime which provides both for you.
 
-Before we talk more about how this relates to `Futures`lets first have a look at the minimum components this we need.
+Before we talk more about how this relates to `Futures`lets first take a look at what we need to implement. To create a minimal example of the Reactor Pattern we need:
 
 1. **Reactor**
    1. An event queue
@@ -115,14 +115,14 @@ There is of course many ways which we could choose to handle this, feel free to 
 {% hint style="info" %}
 ### How does this relate to async in Rust?
 
-In rust libraries like `Tokio`or `async_std`takes on the role as Executors. Generally a `Reactor`and an `Executor`will be provided together in a runtime so you won't have to actually call different methods on the `Executor`and `Reactor`like we do here and instead leave that to the runtime you choose. 
+In rust libraries like `Tokio`or `async_std`takes on the role as Executors. Generally a `Reactor`and an `Executor`will be provided together in a runtime so you won't have to actually call different methods on the `Executor`and `Reactor`like we do here and instead leave that to the runtime you use.
 
 However, there is nothing in Rusts standard library or language which prevents you to choose an `Reactor`and an `Executor`based on your needs.
 {% endhint %}
 
 ### Task
 
-To actually use our `Reactor`and `Executor`we need to provide some code which glues everything together. For our simple example, it will look like this:
+To actually use our `Reactor`and `Executor`we need to provide some code which glues everything together. It looks like this:
 
 ```rust
 fn main() {
@@ -152,28 +152,28 @@ fn main() {
 }
 ```
 
-There are a few things to note here. First of all the `TcpStream`is provided to us by our `Reactor`and is not the one in the standard library. Sencondly you'll see that we have only implemented methods for `Read`and not for `Write`. If we had to write all our async code like this it wouldn't be very ergonomic. Thats why we use runtimes which does a lot of this for us, like closing down our `Poll`loop, releasing resources and joining threads.
+There are a few things to note here. First of all the `TcpStream`is provided to us by our `Reactor`and is not the one in the standard library. Secondly you'll see that we have only implemented methods for `Read`and not for `Write`. If we had to write all our async code like this it wouldn't be very ergonomic. That's why we use runtimes which does a lot of this for us, like closing down our `Poll`loop, releasing resources and joining threads.
 
 **Lets go through the steps we take here:**
 
 1. We provide a means of communication between our `Reactor`and `Executor`
 2. We instantiate a `Reactor`and an `Executor`
-3. We open a socket and write a request \(to a slow endpoint wich will wait 1000ms before responding\)
-4. We register a `Read`intrerest on that socket with our `Reactor`
-5. We register a handle function with our `Executor`to be run once data is ready
-6. We stop the `Poll`loop manually in our handler function \(we only have one task\)
+3. We open a socket and write a request \(to a slow endpoint which will wait 1000ms before responding\)
+4. We register a `Read`interest on that socket with our `Reactor`
+5. We register a handler function with our `Executor`to be run once data is ready
+6. We stop the `Poll`loop explicitly in our handler function \(we only have one task\)
 7. We run our `Executor`and block until all tasks are finished
 
 {% hint style="info" %}
-### How does this releate to async in Rust?
+### How does this relate to async in Rust?
 
-We have a task here which we manually stop in the middle and then resume once data is ready for us. The task is "Get data from the socket and assert that we actually recieved some data".
+We have a task here which we manually stop in the middle and then resume once data is ready for us. The task is "Get data from the socket and assert that we actually received some data".
 
-To accomplish this we use a callback based approach. In Rust, we'd normally use `Futures`to do this. We'll cover this in more detail in a later book, but it's important to remember that a `Future`is just a different way of creating an interruptable task. 
+To accomplish this we use a callback based approach. In Rust, we'd normally use `Futures`to do this. We'll cover this in more detail in a later book, but it's important to remember that a `Future`is just a different way of creating an interruptible task. 
 
 In addition, Rusts `Futures`provide a `Waker`which should be used to let the `Executor`know that a task can be woken up and resumed. In our example we have a tight coupling between the executor and reactor through the use of a regular `Channel`as a way to communicate. With `Futures`the executor and reactor can be totally decoupled.
 
-As a final note. We run part of our task on the main thread. Normally, a runtime will let you just `spawn`your task an take care of suspending and resuming it for you.
+As a final note. We run part of our task on the main thread. Normally, a runtime will let you just `spawn`your task an take care of starting, suspending and resuming it for you.
 {% endhint %}
 
 ### Full code example
