@@ -4,7 +4,7 @@ This pattern is most often referred to as just [Reactor Pattern](https://tianpan
 
 In Rust we often refer to both a `Reactor`and an `Executor`when we talk about its asynchronous model. The reason for this is that `Futures`in Rust fits nicely in between as the glue that allows these two pieces to work together.
 
-One huge advantage of this is that this allows us in theory to pick both a `Reactor`and an `Executor`which best suits our problem at hand, though in reality you'll most often use a runtime which provides both for you.
+One huge advantage of this is that this allows us to pick the `Reactor`and the `Executor`which best suits our problem at hand. In pratice, you'll most often use a runtime which provides both for you.
 
 Before we talk more about how this relates to `Futures`lets first take a look at what we need to implement. To create a minimal example of the Reactor Pattern we need:
 
@@ -16,11 +16,11 @@ Before we talk more about how this relates to `Futures`lets first take a look at
    2. A set of suspended tasks
 3. **Tasks**
    1. The user code representing a task we have to complete
-   2. Needs to be interruptable so it can be suspended and yield control to the Executor instead of waiting for I/O.
+   2. Needs to be interruptible so it can be suspended and yield control to the Executor instead of waiting for I/O.
 
 ### The Reactor
 
-The cross platform Epoll/Kqueue/IOCP library which we implement in this book can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready and we actually need to recieve the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
+The cross platform Epoll/Kqueue/IOCP library which we implement in this book can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready and we actually need to receive the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
 
 A very simple `Reactor`can look like this:
 
