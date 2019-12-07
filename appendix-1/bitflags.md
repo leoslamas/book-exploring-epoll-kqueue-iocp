@@ -1,6 +1,6 @@
 # Bitflags
 
-Bitflags are commonly used as a conventient way of providing users of a library a set of options they can set. When using options that can either be enabled or disabled we refer to this as setting a `flag`. 
+`flag`. 
 
 Bitflags are also very space-efficient to use since each bit is treated as an option. Manipulating and interpreting these flags uses some of the most basic and optimized instructions on the CPU which makes working with them very fast as well.
 
@@ -28,7 +28,7 @@ While both are possible, a chef might want to first know what kind of cheese the
 
 In the second alternative the chef only needs to check if the first bit is 1 or 0. 
 
-The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choices. That's why using bitflags are popular and widely used.
+The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choices. That's why using bitflags are popular and widely usedBitflags are commonly used as a convenient way of providing users of a library a set of options they can set. When using options that can either be enabled or disabled we refer to this as setting a .
 
 **Here are some examples using bitflags:**
 
