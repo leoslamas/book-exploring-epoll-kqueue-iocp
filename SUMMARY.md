@@ -9,9 +9,10 @@
   * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
 * [Designing our API](untitled.md)
 * [Implementing our API](implementing-our-api/README.md)
+  * [Public API](implementing-our-api/public-api.md)
+  * [IOCP](implementing-our-api/iocp.md)
   * [Epoll](implementing-our-api/epoll.md)
   * [Kqueue](implementing-our-api/kqueue.md)
-  * [IOCP](implementing-our-api/iocp.md)
 
 ## Appendix <a id="appendix-1"></a>
 
