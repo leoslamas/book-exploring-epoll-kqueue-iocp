@@ -113,18 +113,13 @@ impl Reactor {
                 };
                 
                 for event in &events {
-                    let event_token = event.id().value();
+                    let event_token = event.id();
                     evt_sender.send(event_token).expect("Send event_token err.");
                 }
             }
         });
 
         Reactor { handle: Some(handle), registrator: Some(registrator) }
-    }
-
-    fn register_stream_read_interest(&self, stream: &mut TcpStream, token: usize) {
-        let registrator = self.registrator.as_ref().unwrap();
-        registrator.register(stream, token, Interests::READABLE).expect("Registration err.");
     }
 
     fn registrator(&mut self) -> Registrator {
@@ -293,7 +288,7 @@ impl Reactor {
                     Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
                 };
                 for event in &events {
-                    let event_token = event.id().value();
+                    let event_token = event.id();
                     evt_sender.send(event_token).expect("send event_token err.");
                 }
             }

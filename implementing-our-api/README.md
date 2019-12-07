@@ -10,12 +10,10 @@ minimio
    +--> src
    |     |
    |     +--> lib.rs
-   +--> tests
-   |      |
-   |      +--> api.rs
+
 ```
 
-Let's just start by naming the structs and methods we need to implement the API we designed in the last chapter just to get a starting point. The 
+Let's just start by naming the structs and write out the function definitions we implement the API we designed in the last chapter just to get a starting point. The 
 
 ===== TOKEN====
 

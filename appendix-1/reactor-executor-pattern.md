@@ -46,7 +46,7 @@ impl Reactor {
                     Err(e) => panic!("Poll error: {:?}, {}", e.kind(), e),
                 };
                 for event in &events {
-                    let event_token = event.id().value();
+                    let event_token = event.id();
                     evt_sender.send(event_token).expect("send event_token err.");
                 }
             }
