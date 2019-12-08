@@ -71,10 +71,10 @@ We have three important methods here.
 
 First `new`instanciates a new instance of Poll. If you're not very familiar with Rust yet, I'll explain what we do here since it can be hard to understand:
 
-`Selector::new()`returns a `io::Result<Selector>`. The `Result`enum in Rust has a method called `map`. This method is ony called if the result is `Result::Ok( ... )`, and passes the value `...`into the closure we provide. So if the call to `Selector::new()`does not return an `Err`we create a `Poll`instance:
+`Selector::new()`returns a `io::Result<Selector>`. The `Result`enum in Rust has a method called `map`. This method is only called if the result is `Result::Ok( ... )`, and passes the value `...`into the closure we provide. So if the call to `Selector::new()`does not return an `Err`we create a `Poll`instance in the closure:
 
 ```rust
-Poll {
+|selector| Poll {
     registry: Registry { selector },
     is_poll_dead: Arc::new(AtomicBool::new(false)),
 }
