@@ -64,6 +64,7 @@ minimio
    |     |
    |     +--> lib.rs
    |     +--> linux.rs
+   |     +--> macos.rs
    |     +--> windows.rs
    +--> tests
    |      |
