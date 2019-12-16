@@ -233,7 +233,7 @@ Wait!! What? Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else
 
 Oh, so you trusted the manpage for Linux did you? Yeah, me too. It turns out it's written for users of the C library, not for `ffi`.
 
-Turns out after a little bit of searching \(well, to be honest I thought there was something wrong with the Windows Subsystem for Linux\) that the manpage doesn't tell the whole truth. The real definition looks like this:
+After a little bit of searching \(well, to be honest it was a lot of searching\) I found out that the manpage doesn't tell the whole truth. The real definition looks like this \(thanks to user @Talchas on the Rust discord channel for figuring this out\):
 
 ```c
 struct epoll_event {
@@ -244,7 +244,7 @@ epoll_data_t data;  /* User data variable */
 
 The `__EPOLL_PACKED` directive was not in the manpage. This means that it's not padded which would normally be the case when declaring a 32-bit sized data type before a 64-bit sized datatype. We're actually reading invalid data when we don't acount for this.
 
-Fortunately working with FFI in Rust is really good and we only need to change the definition to this:
+Fortunately FFI in Rust is really pleasant to work with and we only need to make one small change to fix this:
 
 ```rust
 #[derive(Debug, Clone, Copy)]
@@ -255,7 +255,7 @@ pub struct Event {
 }
 ```
 
-Notice the `#[repr(C, packed)]`attribute? This tells the Rust compiler to treat this as a packet struct which is what we need. We also need to derive `Clone`and `Copy`to be able to safel create a `Debug` display of a packed struct.
+Notice the `#[repr(C, packed)]`attribute? This tells the Rust compiler to treat this as a packet struct which is what we need. We also need to derive `Clone`and `Copy`to be able to safely create a `Debug` display of a packed struct.
 
 Running our example again gives us what we expected:
 
