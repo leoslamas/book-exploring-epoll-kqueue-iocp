@@ -1,6 +1,6 @@
 # Designing our API
 
-The first thing we need to do is to create a library project to start coding. We'll name our project `minimio.`
+The first thing we need to do is to create a library project where we'll organize our code. We'll name our project `minimio.`
 
 Run the following commands to create our project:
 
@@ -12,7 +12,7 @@ cargo init --lib
 
 ### Using integration tests to drive the API design
 
-The first think I like to do when I know roughly what API  I want to use is to start a new project by defining roughly the API I want to use. 
+The first think I like to do when I know roughly what API  I want to use is to start a new project by writing down the API and how I want to use it in an integration test.
 
 For now we only want to cover one use case and that is to provide a event queue we can use in our [examples-node-eventloop](https://github.com/cfsamson/examples-node-eventloop). Now, whether you've read my prevoius book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.
 
@@ -39,53 +39,65 @@ minimio
 
 Now open `api.rs`and let's start desiging how we want our API to work.
 
-**We have some requirements:**
+### **Our Requirements**
 
 1. We want to be able to block the current thread while we wait for events
 2. We want the same API across operating systems
 3. We want to be able to register interest from a different thread than we run the main loop on
 
-Ok, so before we dive into the code, let's consider what we can immideately derive from these requirements.
+_Ok, so before we dive into the code, let's consider what we can immideately derive from these requirements._
 
-### Blocking the current thread
+### 1. Blocking the current thread
 
-We need an interface we can use which provides a way for us to block the current thread while waiting for events to be ready. We also need something that identifies an event so we know which one finished in what order. We need to be able to send a signal to stop waiting in \(1\) and exit from the blocking call or else our program would never exit \(if the event queue is run on our main thread\) or end i a "bad" way if we run it in a child thread.
+We need an interface we can use which provides a way for us to block the thread while waiting for events to be ready. We also need something that identifies an event so we know which one finished in what order. We need to be able to send a signal to stop waiting in and exit from the blocking call or else our program would never exit \(if the event queue is run on our main thread\) or end in a "bad" way if we run it in a child thread.
 
-* We'll call the structure providing a blocking method. Inpsired by `mio` we call our main event queue instance `Poll`, and the blocking method `poll()`
+**Summary:**
+
+* Inpsired by `mio` we call our main event queue instance `Poll`, and the blocking method `poll()`
 * We'll call the thing which identifies an event a `Token` \(which will simply be a `usize`in this case\)
 * We'll need a structure representing an `Event`
 
-### One API for all platforms
+### 2. One API for all platforms
 
-This is a difficult one. And it's very difficult to decide on in advance before actually digging into the details of both Epoll, Kqueue and IOCP. We know that IOCP requires us to provide a buffer which is filled with data but Epoll and Kqueue let's us know when data is ready to read. At least we can derive from that tha we need to hook into whatever method the user calls for retrieving data. It seems impossible for us to provide any abstration lower than that.
+This is a difficult one. And it's very difficult to decide on in advance before actually digging into the details of both Epoll, Kqueue and IOCP. 
+
+We know that IOCP requires us to provide a buffer which it will fill with data but Epoll and Kqueue let's us know when data is ready to read. At least we can derive from these facts that we need to hook into whatever method the user calls for retrieving data. It seems impossible for us to provide any abstration lower than that.
 
 Once we realize that we also realize that using `std::net::TcpStream`is out of the question, but we can implement our own `TcpStream`where we "hijack" the `Read`methods \(and `Write`methods if we implemented those as well\). This way we can use `std::net::TcpStream`under the hood but implement our own `Read`implementation.
+
+**Summary:**
 
 * We need to provide a `TcpStream`
 * We need something to represent what kind of event we're interested in. We'll call that `Interests`
 
-### Register interest from a different thread
+### 3. Register interest from a different thread
 
 So we want the user to be able to register interest from one thread and block while waiting for events on another thread. That means we need some way of having a basic synchonization to know that our `Poll`instance is actually waiting for events and that we have created an event queue.
 
 It's apparent that this structure will be closely tied to our event queue. There are many ways to solve this but let's just start with a name and an idea of how it should work.
 
+**Summary:**
+
 * We need a `Registrator`which knows if our event queue is alive and can be sent to another thread.
 
 ### The integration test
 
-So we have a rough idea about our API now so let's start scetching out a test. We'll divide this into smaller unit tests later but test against this to know when we've reached our goal for now.
+So we have a rough idea about our API now so let's start scetching out a test. We'll divide this into some smaller unit tests later and use this integration test to know when we've reached our goal for now.
 
 Lets start with the imports we know we need from our library:
+
+{% hint style="info" %}
+An integration test in Rust uses our library as it would be used by any other user, therefore we can only access the public API of our library.
+{% endhint %}
 
 ```rust
 use minimio::{Events, Interests, Poll, Registrator, TcpStream};
 ```
 
-The first thing we want to do is to consider how we want to use our API. Now, to actually create an integration test which tests something usefull we need some plumbing. More specifically we're going to use a `Reactor`and an `Executor`to create a task, suspend it, wait for a `READABLE`event and then resume and finish our task.
+The first thing we want to do is to consider how we want to use our API.  More specifically we're going to use a `Reactor`and an `Executor`to create a task, suspend it, wait for a `READABLE`event and then resume and finish our task.
 
 {% hint style="info" %}
-The pattern we use here is described in the Appendix chapter [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md) for an explanation of this pattern and a more thorough explanation of our integration I recommend that you check out that chapter.
+See the chapter named [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md) in the appendix for an explanation of this pattern. Most questions that will be answered there.
 {% endhint %}
 
 Our library will be used in the `Reactor`so let's focus on that specific part of the code first.
