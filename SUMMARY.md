@@ -2,6 +2,7 @@
 
 * [Introduction](README.md)
 * [External events and I/O](what-is-epoll-kqueue-and-iocp.md)
+* [The Basics](the-basics.md)
 * [An event queue recipie](the-recipie-for-an-eventqueue/README.md)
   * [Introduction](the-recipie-for-an-eventqueue/introduction.md)
   * [IOCP](the-recipie-for-an-eventqueue/iocp.md)
