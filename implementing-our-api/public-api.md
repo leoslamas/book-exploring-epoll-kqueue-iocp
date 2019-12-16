@@ -142,7 +142,7 @@ pub struct Registry {
 }
 ```
 
-```Interests```
+### `Interests`
 
 This struct is just provides a simple way for us to to let a user express what kind of event they want to register interest in. This struct uses a somewhat uncommon technique of defining constants inside the struct itself.
 

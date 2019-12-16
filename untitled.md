@@ -51,11 +51,11 @@ _Ok, so before we dive into the code, let's consider what we can immideately der
 
 We need an interface we can use which provides a way for us to block the thread while waiting for events to be ready. We also need something that identifies an event so we know which one finished in what order. We need to be able to send a signal to stop waiting in and exit from the blocking call or else our program would never exit \(if the event queue is run on our main thread\) or end in a "bad" way if we run it in a child thread.
 
-**Summary:**
-
+{% hint style="info" %}
 * Inpsired by `mio` we call our main event queue instance `Poll`, and the blocking method `poll()`
 * We'll call the thing which identifies an event a `Token` \(which will simply be a `usize`in this case\)
 * We'll need a structure representing an `Event`
+{% endhint %}
 
 ### 2. One API for all platforms
 
@@ -65,10 +65,10 @@ We know that IOCP requires us to provide a buffer which it will fill with data b
 
 Once we realize that we also realize that using `std::net::TcpStream`is out of the question, but we can implement our own `TcpStream`where we "hijack" the `Read`methods \(and `Write`methods if we implemented those as well\). This way we can use `std::net::TcpStream`under the hood but implement our own `Read`implementation.
 
-**Summary:**
-
+{% hint style="info" %}
 * We need to provide a `TcpStream`
 * We need something to represent what kind of event we're interested in. We'll call that `Interests`
+{% endhint %}
 
 ### 3. Register interest from a different thread
 
@@ -76,9 +76,9 @@ So we want the user to be able to register interest from one thread and block wh
 
 It's apparent that this structure will be closely tied to our event queue. There are many ways to solve this but let's just start with a name and an idea of how it should work.
 
-**Summary:**
-
+{% hint style="info" %}
 * We need a `Registrator`which knows if our event queue is alive and can be sent to another thread.
+{% endhint %}
 
 ### The integration test
 

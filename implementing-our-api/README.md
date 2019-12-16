@@ -1,6 +1,6 @@
 # Implementing our API
 
-The first thing we do is to describe and implement the platform-indipendant functionality and the common surface of our library. 
+The first thing we do is to describe and implement the platform-indipendant functionality and the public surface of our library. 
 
 Navigate to `lib.rs`and open the file.
 
@@ -98,7 +98,7 @@ pub use windows::{Event, Registrator, Selector, TcpStream};
 As you see here we pull inn exactly the same methods from each of the modules. They need to have the same API and the same signatures to work.
 
 {% hint style="info" %}
-An alternative to manually making sure that we have the same API on each arcitecture is to define `Traits`for Event, Registrator, TcpStream and make sure our platform specific structs implement these. We keep it simple here and the way we do it here is a pretty common pattern when dealing with platform specific code in Rust. 
+An alternative to manually making sure that we have the same API on each arcitecture is to define `Traits`for Event, Registrator, TcpStream and make sure our platform specific structs implement these. We keep it simple though. Actually, the way we do it here is a pretty common pattern when dealing with platform specific code in Rust. 
 {% endhint %}
 
 You might wonder what these methods do, and we'll go through that in detail in the following chapters, but we'll quickly introduce them here:

@@ -4,9 +4,9 @@ description: >-
   this is Macos. Kqueue, similarely to Epoll, is a readiness based model.
 ---
 
-# Kqueue
+# Kqueue Reference
 
-## The Kqueue raw materials:
+## Quick reference of important Kqueue syscalls
 
 ### `kqueue`
 

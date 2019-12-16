@@ -1,8 +1,10 @@
 # IOCP
 
+{% hint style="info" %}
 We're starting off with Windows and IOCP since, well, I did it the other way around on my first go at this project and that turned out to require a total rewrite when I tried to fit the completion based `IOCP` model to the readiness based models like `kqueue`and `epoll`.
 
 It's also by far going to be the implementation requiring most lines of code.
+{% endhint %}
 
 Let's move in to the `windows.rs`file in our project.
 
@@ -77,7 +79,7 @@ In Rust, all `ffi`calls are `unsafe`. It's a common pattern to create safe wrapp
 
 ### CreateIoCompletionPort
 
-Creates an event queue, or a `CompletionPort`which it is calle on Windows. This will be the first thing we call when we want to start an IOCP event queue.
+Creates an event queue, or a `CompletionPort`which it is called on Windows. This will be the first thing we call when we want to start an IOCP event queue.
 
 The safe wrapper around this call looks like this:
 

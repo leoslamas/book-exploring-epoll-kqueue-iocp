@@ -2,12 +2,8 @@
 
 * [Introduction](README.md)
 * [External events and I/O](what-is-epoll-kqueue-and-iocp.md)
-* [The Basics](the-basics.md)
-* [An event queue recipie](the-recipie-for-an-eventqueue/README.md)
-  * [Introduction](the-recipie-for-an-eventqueue/introduction.md)
-  * [IOCP](the-recipie-for-an-eventqueue/iocp.md)
-  * [Kqueue](the-recipie-for-an-eventqueue/kqueue.md)
-  * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
+* [An Example To Build Upon](the-basics.md)
+* [An event queue recipie](the-recipie-for-an-eventqueue.md)
 * [Designing our API](untitled.md)
 * [Implementing our API](implementing-our-api/README.md)
   * [Public API](implementing-our-api/public-api.md)
@@ -20,5 +16,8 @@
 * [About the Appendix](appendix-1/about.md)
 * [Bitflags](appendix-1/bitflags.md)
 * [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md)
+* [IOCP Reference](appendix-1/iocp.md)
+* [Epoll Reference](appendix-1/epoll.md)
+* [Kqueue Reference](appendix-1/kqueue.md)
 * [It's not that easy](appendix-1/its-not-that-easy.md)
 

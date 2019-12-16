@@ -5,9 +5,9 @@ description: >-
   model.
 ---
 
-# IOCP
+# IOCP Reference
 
-## The IOCP raw materials
+## Quick reference of important IOCP syscalls
 
 ### CreateCompletionPort
 
