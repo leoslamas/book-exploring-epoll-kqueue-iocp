@@ -113,9 +113,11 @@ This method will registers an interest in a `data recieved`event. Together with 
 Windows, calls an operation we can await in an event queue an `Overlapped Operation`. Knowing this is handy when it comes to understanding the names of data structures and functions on Windows.
 
 {% hint style="info" %}
-This function can return `0`, which means no error occurred and that the `Recieve`operation completed immediately. In this case there is nothing for us to await and we should handle the case when data is already there \(we'll not cover this edge case in our implementation though\). **This is however not what we expect this function to return!**
+This function can return `0`, which means no error occurred and that the `Recieve`operation completed immediately. **This is however not what we expect this function to return!** 
 
-So you thought the `Success`case was what we're expecting, yes? Funny thing, in this specific case we expect failure. 
+So you thought the `Success`case was what we're expecting, yes? In this specific case we expect failure! 
+
+In we get a result indicating success there is nothing for us to await and we should handle the case when data is already there \(we'll not cover this case in our implementation though\).
 
 Turns out that we actually expect to get an error of the type [WSA\_IO\_PENDING](https://docs.microsoft.com/windows/desktop/WinSock/windows-sockets-error-codes-2) which has the error code `997`. This error means that the overlapped operation has been successfully initiated and that completion will be indicated at a later time.
 
