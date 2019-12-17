@@ -307,8 +307,9 @@ We need to define some structures and some constants which are missing from our 
     #[repr(C)]
     #[derive(Debug, Clone)]
     pub struct OVERLAPPED_ENTRY {
-        // Normally a pointer but since it's just passed through we can store whatever valid usize we want. For our case
-        // an Id or Token is more secure than dereferencing som part of memory later.
+        // Normally a pointer but since it's just passed through we can 
+        // store whatever valid usize we want. For our case an Id or Token 
+        // is more secure than dereferencing som part of memory later.
         lp_completion_key: *mut usize,
         pub lp_overlapped: *mut OVERLAPPED,
         internal: usize,
@@ -342,11 +343,12 @@ We need to define some structures and some constants which are missing from our 
         offset: DWORD,
         /// Reserved for service providers
         offset_high: DWORD,
-        /// If an overlapped I/O operation is issued without an I/O completion routine
-        /// (the operation's lpCompletionRoutine parameter is set to null), then this parameter
-        /// should either contain a valid handle to a WSAEVENT object or be null. If the
-        /// lpCompletionRoutine parameter of the call is non-null then applications are free
-        /// to use this parameter as necessary.
+        /// If an overlapped I/O operation is issued without an I/O 
+        /// completion routine (the operation's lpCompletionRoutine parameter 
+        /// is set to null), then this parameter should either contain a 
+        /// valid handle to a WSAEVENT object or be null. If the
+        /// lpCompletionRoutine parameter of the call is non-null then 
+        /// applications are free to use this parameter as necessary.
         h_event: HANDLE,
     }
 
@@ -395,9 +397,11 @@ We need to define some structures and some constants which are missing from our 
         }
     }
 
-    // You can find most of these here: https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
-    /// The HANDLE type is actually a `*mut c_void` but windows preserves backwards compatibility by allowing
-    /// a INVALID_HANDLE_VALUE which is `-1`. We can't express that in Rust so it's much easier for us to treat
+    // You can find most of these here: 
+    // https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+    // The HANDLE type is actually a `*mut c_void` but windows preserves 
+    // backwards compatibility by allowing a INVALID_HANDLE_VALUE which 
+    // is `-1`. We can't express that in Rust so it's much easier for us to treat
     /// this as an isize instead;
     pub type HANDLE = isize;
     pub type BOOL = bool;
@@ -421,8 +425,8 @@ We need to define some structures and some constants which are missing from our 
     // https://docs.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
     pub const WSA_IO_PENDING: i32 = 997;
 
-    // This can also be written as `4294967295` if you look at sources on the internet.
-    // Interpreted as an i32 the value is -1
+    // This can also be written as `4294967295` if you look at sources on 
+    // the internet. Interpreted as an i32 the value is -1
     // see for yourself: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=4b93de7d7eb43fa9cd7f5b60933d8935
     pub const INFINITE: u32 = 0xFFFFFFFF;
 
