@@ -64,7 +64,7 @@ _What happens if another thread closes the loop before we hit line 22 in the cod
 
 We'll nothing too dramatic, but our event will never return to us and if we're counting on that we might end up blocking for ever somewhere. 
 
-_How can we solve this?_
+**How can we solve this?**
 
 There are probably several possible solutions to this. The first that came to my mind was:
 
