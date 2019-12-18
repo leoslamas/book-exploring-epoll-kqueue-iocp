@@ -285,7 +285,7 @@ pub struct Event {
 
 Notice the `#[repr(C, packed)]`attribute? This tells the Rust compiler to treat this as a packed struct which is what we need. We also need to derive `Clone`and `Copy`to be able to safely create a `Debug` display of a packed struct.
 
-Running our example again gives us what we expected:
+**Running our example again gives us what we expected:**
 
 ```text
 RECIEVED: Event { events: 1, epoll_data: 5 }
