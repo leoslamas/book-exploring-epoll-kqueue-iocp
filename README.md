@@ -4,7 +4,7 @@ description: Cross Platform Event Queues Explained With Rust
 
 # The Boring Book About Epoll, Kqueue and IOCP
 
-Yep. After spending a couple of hundred hours on this I've concluded that this is actually pretty boring stuff. It's fun to know, but definately boring to learn. 
+Yep. After spending a couple of hundred hours on this I've concluded that this is actually pretty boring stuff. It's fun to know, but definately boring to learn in detail. 
 
 However, it's very usefull knowledge which can be pretty hard to come by, and it's a big deal if you know this well. I do really hope this is a good introduction which can either serve as a reference or as an inspiration to dig deeper.
 
