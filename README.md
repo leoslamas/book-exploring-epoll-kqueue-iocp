@@ -48,7 +48,7 @@ We'll create an extremely simple cross platform library which leverages Epoll on
 
 ### Disclaimer
 
-This will be an introduction to this subject. The example we write will have a strong focus on create a working but minimal example. There is a ton of edge cases we don't cover, but the most important ones is mentioned in the appendix chapter: It's not that easy. Please read that chapter too. 
+This will be an introduction to this subject. The example we write will have a strong focus on create a working but minimal example. There is a ton of edge cases we don't cover, but the most important ones is mentioned in the appendix chapter:[ It's not that easy.](appendix-1/its-not-that-easy.md) Please read that chapter too. 
 
 If there are important omissions I have made which are not mentioned there, consider making creating an [issue ](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues)or a [pull request](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/pulls) to add it.
 
