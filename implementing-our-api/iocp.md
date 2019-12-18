@@ -284,15 +284,6 @@ We'll not create a safe wrapper around this since we only call this function in 
 We need to define some structures and some constants which are missing from our `ffi`module inside `windows.rs`so far. I'll present more constants than we actually use, but if you want to play around with this they might come in handy.
 
 ```rust
- #[derive(Debug, Clone)]
-    pub struct IOCPevent {}
-
-    impl Default for IOCPevent {
-        fn default() -> Self {
-            IOCPevent {}
-        }
-    }
-
     #[repr(C)]
     #[derive(Clone, Debug)]
     pub struct WSABUF {
@@ -309,11 +300,10 @@ We need to define some structures and some constants which are missing from our 
     #[repr(C)]
     #[derive(Debug, Clone)]
     pub struct OVERLAPPED_ENTRY {
-        // Normally a pointer but since it's just passed through we can 
-        // store whatever valid usize we want. For our case an Id or Token 
-        // is more secure than dereferencing som part of memory later.
+        // Normally a pointer but since it's just passed through we can store whatever valid usize we want. For our case
+        // an Id or Token is more secure than dereferencing som part of memory later.
         lp_completion_key: *mut usize,
-        pub lp_overlapped: *mut OVERLAPPED,
+        pub lp_overlapped: *mut WSAOVERLAPPED,
         internal: usize,
         bytes_transferred: u32,
     }
@@ -345,12 +335,11 @@ We need to define some structures and some constants which are missing from our 
         offset: DWORD,
         /// Reserved for service providers
         offset_high: DWORD,
-        /// If an overlapped I/O operation is issued without an I/O 
-        /// completion routine (the operation's lpCompletionRoutine parameter 
-        /// is set to null), then this parameter should either contain a 
-        /// valid handle to a WSAEVENT object or be null. If the
-        /// lpCompletionRoutine parameter of the call is non-null then 
-        /// applications are free to use this parameter as necessary.
+        /// If an overlapped I/O operation is issued without an I/O completion routine
+        /// (the operation's lpCompletionRoutine parameter is set to null), then this parameter
+        /// should either contain a valid handle to a WSAEVENT object or be null. If the
+        /// lpCompletionRoutine parameter of the call is non-null then applications are free
+        /// to use this parameter as necessary.
         h_event: HANDLE,
     }
 
@@ -366,44 +355,9 @@ We need to define some structures and some constants which are missing from our 
         }
     }
 
-    // https://docs.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-overlapped
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct OVERLAPPED {
-        pub internal: ULONG_PTR,
-        internal_high: ULONG_PTR,
-        dummy: [DWORD; 2],
-        h_event: HANDLE,
-    }
-
-    #[repr(C)]
-    pub struct WSADATA {
-        w_version: u16,
-        i_max_sockets: u16,
-        i_max_u_dp_dg: u16,
-        lp_vendor_info: u8,
-        sz_description: [u8; WSADESCRIPTION_LEN + 1],
-        sz_system_status: [u8; WSASYS_STATUS_LEN + 1],
-    }
-
-    impl Default for WSADATA {
-        fn default() -> WSADATA {
-            WSADATA {
-                w_version: 0,
-                i_max_sockets: 0,
-                i_max_u_dp_dg: 0,
-                lp_vendor_info: 0,
-                sz_description: [0_u8; WSADESCRIPTION_LEN + 1],
-                sz_system_status: [0_u8; WSASYS_STATUS_LEN + 1],
-            }
-        }
-    }
-
-    // You can find most of these here: 
-    // https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
-    // The HANDLE type is actually a `*mut c_void` but windows preserves 
-    // backwards compatibility by allowing a INVALID_HANDLE_VALUE which 
-    // is `-1`. We can't express that in Rust so it's much easier for us to treat
+    // You can find most of these here: https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+    /// The HANDLE type is actually a `*mut c_void` but windows preserves backwards compatibility by allowing
+    /// a INVALID_HANDLE_VALUE which is `-1`. We can't express that in Rust so it's much easier for us to treat
     /// this as an isize instead;
     pub type HANDLE = isize;
     pub type BOOL = bool;
@@ -416,7 +370,6 @@ We need to define some structures and some constants which are missing from our 
     pub type LPDWORD = *mut DWORD;
     pub type LPWSABUF = *mut WSABUF;
     pub type LPWSAOVERLAPPED = *mut WSAOVERLAPPED;
-    pub type LPOVERLAPPED = *mut OVERLAPPED;
     pub type LPWSAOVERLAPPED_COMPLETION_ROUTINE = *const extern "C" fn();
 
     // https://referencesource.microsoft.com/#System.Runtime.Remoting/channels/ipc/win32namedpipes.cs,edc09ced20442fea,references
@@ -427,14 +380,99 @@ We need to define some structures and some constants which are missing from our 
     // https://docs.microsoft.com/en-us/windows/win32/winsock/windows-sockets-error-codes-2
     pub const WSA_IO_PENDING: i32 = 997;
 
-    // This can also be written as `4294967295` if you look at sources on 
-    // the internet. Interpreted as an i32 the value is -1
+    // This can also be written as `4294967295` if you look at sources on the internet.
+    // Interpreted as an i32 the value is -1
     // see for yourself: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=4b93de7d7eb43fa9cd7f5b60933d8935
     pub const INFINITE: u32 = 0xFFFFFFFF;
 
-    pub const WSADESCRIPTION_LEN: usize = 256;
-    pub const WSASYS_STATUS_LEN: usize = 128;
+```
 
+{% hint style="info" %}
+It's worth noting that the `OVERLAPPED` structure comes in two flavors: `OVERLAPPED`and `WSAOVERLAPPED`. Windows defines the `WSAOVERLAPPED`structure as equivalent to the Win32 `OVERLAPPED`structure \([reference](https://msdn.microsoft.com/en-us/ie/ff565952%28v=vs.94%29)\). This means that even though WinAPI sometimes defines a `OVERLAPPED`structure you can safely use the `WSAOVERLAPPED`structure instead.
+
+We can avoid having to deal with two different structures and simplify our code a bit by using this information to only use `WSAOVERLAPPED`when dealing with this API.
+{% endhint %}
+
+### Event, Registrator, Selector and TcpStream
+
+Now that we have wired up our `ffi`module it's time to implement the public API of the Windows module.
+
+#### The Event struct
+
+We start of easy. Event is just a type alias for our `OVERLAPPED_ENTRY`struct. We have implemented one public methods on this: `fn id(&self) -> Token`and a private one `zeroed()`which just zero initializes all the fields.
+
+```rust
+pub type Event = ffi::OVERLAPPED_ENTRY;
+```
+
+The Registrator
+
+The registrator needs to be "linked" to our completion port, and should be able to check if the event loop is alive or not so we don't use the `Registrator`after we sent a `close_signal`to our event loop.
+
+We use an `Arc<AtomicBool>`to check if the `Poll`instance is alive or not. The "link" to the completion port is simply the completion port handle.
+
+Registrator has two public methods: `register`and `close_loop`. 
+
+Register is interesting. it takes a `TcpStream`\(not the `std::net`one though\), a token and a bitflag indicating what interests we're interested in.
+
+Now, the first thing we do is to check if the `Poll`instance is dead.
+
+{% hint style="danger" %}
+Warning! Remember that the `Registrator`is meant to just be used on **one** different thread that our `Poll`instance. There is a big danger in this code. Nothing prevents us from creating multiple poll instances and call them from several different threads.
+
+In such a case, another thread might have closed the loop after we've checked the `is_poll_dead`flag, but before we actually register the event. Read the [relevant paragraph in the Appendix chapter "It's not that easy"](../appendix-1/its-not-that-easy.md#thread-safety-and-race-conditions) for more information.
+{% endhint %}
+
+```rust
+pub struct Registrator {
+    completion_port: isize,
+    is_poll_dead: Arc<AtomicBool>,
+}
+
+impl Registrator {
+    pub fn register(
+        &self,
+        soc: &mut TcpStream,
+        token: usize,
+        interests: Interests,
+    ) -> io::Result<()> {
+        if self.is_poll_dead.load(Ordering::SeqCst) {
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "Poll instance is dead.",
+            )); 
+        }
+
+        ffi::create_io_completion_port(
+            soc.as_raw_socket(), 
+            self.completion_port, token
+            )?;
+
+        if interests.is_readable() {
+            ffi::wsa_recv(soc.as_raw_socket(), &mut soc.wsabuf)?;
+        } else {
+            unimplemented!();
+        }
+
+        Ok(())
+    }
+
+    pub fn close_loop(&self) -> io::Result<()> {
+        if self
+            .is_poll_dead
+            .compare_and_swap(false, true, Ordering::SeqCst)
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "Poll instance is dead.",
+            ));
+        }
+        
+        let mut overlapped = ffi::WSAOVERLAPPED::zeroed();
+        ffi::post_queued_completion_status(self.completion_port, 0, 0, &mut overlapped)?;
+        Ok(())
+    }
+}
 ```
 
 ```rust
@@ -470,8 +508,7 @@ use std::os::windows::io::{AsRawSocket, RawSocket};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-pub type Event = ffi::OVERLAPPED_ENTRY;
-pub type Source = std::os::windows::io::RawSocket;
+
 
 #[derive(Debug)]
 pub struct TcpStream {
@@ -518,12 +555,7 @@ impl TcpStream {
             event: None,
             token: None,
             pos: 0,
-            //status: TcpReadiness::NotReady,
         })
-    }
-
-    pub fn source(&self) -> Source {
-        self.inner.as_raw_socket()
     }
 }
 
@@ -565,54 +597,7 @@ impl AsRawSocket for TcpStream {
     }
 }
 
-pub struct Registrator {
-    completion_port: isize,
-    is_poll_dead: Arc<AtomicBool>,
-}
 
-impl Registrator {
-    pub fn register(
-        &self,
-        soc: &mut TcpStream,
-        token: usize,
-        interests: Interests,
-    ) -> io::Result<()> {
-        if self.is_poll_dead.load(Ordering::SeqCst) {
-            return Err(io::Error::new(
-                io::ErrorKind::Interrupted,
-                "Poll instance is dead.",
-            )); 
-             
-              
-               
-        }
-
-        ffi::create_io_completion_port(soc.as_raw_socket(), self.completion_port, token)?;
-
-        if interests.is_readable() {
-            ffi::wsa_recv(soc.as_raw_socket(), &mut soc.wsabuf)?;
-        } else {
-            unimplemented!();
-        }
-
-        Ok(())
-    }
-
-    pub fn close_loop(&self) -> io::Result<()> {
-        if self
-            .is_poll_dead
-            .compare_and_swap(false, true, Ordering::SeqCst)
-        {
-            return Err(io::Error::new(
-                io::ErrorKind::Interrupted,
-                "Poll instance is dead.",
-            ));
-        }
-        let mut overlapped = ffi::WSAOVERLAPPED::zeroed();
-        ffi::post_queued_completion_status(self.completion_port, 0, 0, &mut overlapped)?;
-        Ok(())
-    }
-}
 
 // possible Arc<InnerSelector> needed
 #[derive(Debug)]

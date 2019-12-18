@@ -54,3 +54,66 @@ We circumvented this by using `EPOLLONESHOT.` Using this actually removes the re
 The proper thing to do here is to read until we get a "loss of readiness" \(if we get that at all\) and suspend the task and wait for another `Ready` event. When using `edge triggered`mode the socket will notify us when it changes state to `Ready`again and we can resume.
 {% endhint %}
 
+### Thread Safety and Race Conditions
+
+Our implementation is pretty brittle in some aspects. Our main focus has been how Kqueue, Epoll and IOCP work, and not how to make a perfect event loop library.
+
+In our `Registrator::register()`method we first check if the `Poll`instance is dead using an `atomic` flag. But if we were to create multiple `Registrators`and send them to different threads we're in trouble.
+
+_What happens if another thread closes the loop before we hit line 22 in the code below?_
+
+We'll nothing too dramatic, but our event will never return to us and if we're counting on that we might end up blocking for ever somewhere. 
+
+_How can we solve this?_
+
+There are probably several possible solutions to this. The first that came to my mind was:
+
+1. Use another flag to indicate that a "registration is in progress". In practice a "registration lock".
+2. We use an atomic swap\_and\_compare in a loop to try to set that flag, exiting the loop when successfull. By successfully setting that flag we're letting other threads know that we're about to register an event and that we hold the "registration lock"
+3. Then we check if the poll is closed and if not we register our event
+4. We then swap the flag back which "releases" the lock and let's other threads acquire the "lock".
+
+This is of course assuming that the registration process itself is so fast that spinning on contention is preferred to other methods of synchronizing access like a `Mutex`or `CondVar`.
+
+Maybe you have a better idea? Feel free to discuss and suggest it in the [Issue Tracker](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues) for this book.
+
+{% hint style="info" %}
+In our example library we treat this as an limitation and do not consider registrations from different threads as something we support.
+{% endhint %}
+
+```rust
+pub fn register(
+    &self,
+    soc: &mut TcpStream,
+    token: usize,
+    interests: Interests,
+) -> io::Result<()> {
+    // SPIN WHILE TRYING TO ACQUIRE A "REGISTRATION LOCK"
+    
+    // THEN check if poll is dead
+    if self.is_poll_dead.load(Ordering::SeqCst) {
+        return Err(io::Error::new(
+            io::ErrorKind::Interrupted,
+            "Poll instance is dead.",
+        ));    
+    }
+
+    ffi::create_io_completion_port(
+        soc.as_raw_socket(), 
+        self.completion_port, token
+    )?;
+
+    if interests.is_readable() {
+        // What happens if the poll has been closed since we checked it?
+        ffi::wsa_recv(soc.as_raw_socket(), &mut soc.wsabuf)?;
+    } else {
+        unimplemented!();
+    }
+    
+    // RELEASE THE "REGISTRATION LOCK"
+    Ok(())
+}
+```
+
+
+

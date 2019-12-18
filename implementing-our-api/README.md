@@ -82,7 +82,7 @@ mod macos;
 mod windows;
 ```
 
-The `[cfg(target_os = "...")]`is a conditional compilation flag. The[ cfg attrbute ](https://doc.rust-lang.org/reference/conditional-compilation.html)lets us define certain condtions that needds to be true for this part of the code to compile. In this case we compile the module if the `target_os`matches.
+The `[cfg(target_os = "...")]`is a conditional compilation flag. The[ cfg attrbute ](https://doc.rust-lang.org/reference/conditional-compilation.html)lets us define certain condtions that needs to be true for this part of the code to compile. In this case we compile the module if the `target_os`matches.
 
 We'll also need some platform specific functionality to actually implement our event queue:
 
@@ -117,7 +117,7 @@ Selector is really the heart of the whole event queue. This is what drives our `
 
 #### `TcpStream`
 
-Is actually supposed to mimich `std::net::TcpStream`but we'll only implement the `connect`method. However, we will also provide our own implementation of the `Read`, `Write`and `AsRawFd/AsRawSocket`traits.
+Is actually supposed to mimick `std::net::TcpStream`but we'll only implement the `connect`method. However, we will also provide our own implementation of the `Read`, `Write`and `AsRawFd/AsRawSocket`traits.
 
 
 

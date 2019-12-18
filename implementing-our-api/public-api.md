@@ -4,7 +4,7 @@ So let's get starting, first out is our public API in `lib.rs`. Let's implement 
 
 ### Event and Token
 
-We start off easy. `Events`is just an ordinary `Vec`of events which are defined in our platform specific modules. `Token`is just a type alias for `usize`. I only include it since it's very common to use `Token`instead of an `Id`to identify an event. The reason for this is that contrary to what we do, another implementation could pass inn a pointer to som data or anything else than a simple number to identify a specific event.
+We start off easy. `Events`is just an ordinary `Vec`of events which are defined in our platform specific modules. `Token`is just a type alias for `usize`. I only include it since it's very common to use `Token`instead of an `usize`to identify an event. The reason for this is that contrary to what we do, another implementation could pass inn a pointer to som data or anything else than a simple number to identify a specific event.
 
 ```rust
 pub type Events = Vec<Event>;
@@ -116,10 +116,10 @@ loop {
 If we get an `Ok()` we proceed to check if we've recieved a close signal while our thread was suspended. If we did we return an `Error`of kind `Interrupted`to the user of our library. We document this so the user knows to check for this error type and act accordingly.
 
 {% hint style="info" %}
-Since `Interrupted`is special cased in the `select`call there is no way for `select`to return and `Interrupted`error kind. That means we know that the only way the `poll`method will return this kind of error is in the case of a closed event queue.
+Since `Interrupted`is special cased in the `select`call there is no way for `select`to return an `Interrupted`error kind. That means we know that the only way the `poll`method will return this kind of error is in the case of a closed event queue.
 {% endhint %}
 
-Lastly we return the number of events returned by checking the `len`of our event array.
+Lastly we return the number of events returned by accessing the `len`of our event array.
 
 ```rust
 if self.is_poll_dead.load(Ordering::SeqCst) {
