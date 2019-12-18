@@ -7,10 +7,10 @@ description: >-
 # An event queue recipie
 
 {% hint style="info" %}
-A brief overview and reference for IOCP, Epoll and Kqueue can be found in the appendix chapters [IOCP Reference](appendix-1/iocp.md), [Epoll Reference](appendix-1/epoll.md) and [Kqueue Reference](appendix-1/kqueue.md). To get a brief overview, head over there and take a quick look.
+A brief overview and reference for IOCP, Epoll and Kqueue can be found in the appendix chapters [IOCP Reference](appendix-1/iocp.md), [Epoll Reference](appendix-1/epoll.md) and [Kqueue Reference](appendix-1/kqueue.md). Head over there and take a quick look to get a quick introduction of each of them.
 {% endhint %}
 
-We won't actually finish the entire event queue, but we want to prepare all the pieces so that a user can set up an event queue very easily using our library in a way that looks something like this:
+In this chapter we want to introduce and prepare all the pieces we need to let a user can set up an event queue using our library. Our end goal is something which looks something like this:
 
 ```rust
 let poll = Poll::new();
@@ -59,7 +59,5 @@ TcpStream is an I/O resource we want to register an interest in. This needs to b
 
 A token will be an unique identifier for the event. We need this to actually be able to tell the different events from each other.
 
-This is really all there is to it. The concept is not difficult, but making these compontents requires a bit of effort since we're dealing with three different implementations. Let's dive in and introduce everything we need to make this event queue work by having a look at our API design.
-
-
+This is really all there is to it. The concept is not difficult, but making these compontents requires a bit of effort since we're dealing with three different implementations. Let's dive and start desiging our API.
 

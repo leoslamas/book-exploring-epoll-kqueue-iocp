@@ -28,7 +28,7 @@ We use `[link(name = "c")]`to tell the linker what library we want to link to an
 
 However, we don't have everything set up yet. The syscalls expects us to pass in more than just primitives. It expects some datastructures we need to define as well.
 
-We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we'll see that we need two more definitions:
+We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we see that we need two more definitions:
 
 ![Click to enlarge](.gitbook/assets/bilde%20%282%29.png)
 
@@ -62,7 +62,7 @@ So this sounds a lot like `Enums`right? Turns out that they're not all that diff
 
 Getting data from a C Union is always unsafe since we have no way of knowing that we have valid data for the type we read into. Fortunately, the `epoll_data`field is a field we provide the data for so we can of course know what data we pass in.
 
-However, if we want to use the `union`interface we need two more methods on our `union`type. Honestly, we could just use a plain `u64`here. A `C`union will write it's data from the first byte anyways so the memory layout of a `Data.uint64`and a `u64`will be the same.
+Honestly, we could just use a plain `u64`here. A `C`union will write it's data from the first byte anyways so the memory layout of a `Data.uint64`and a `u64`will be the same.
 
 It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use and `usize` and that should work. 
 
@@ -86,7 +86,7 @@ mod ffi {
 }
 ```
 
-Nice! So, let's create an `epoll`queue and use it to wait for a response to a slow server. This is fun!
+Nice! So, let's create an `epoll`queue and use it to wait for a response to a slow server. This is the fun part!
 
 ```rust
 use std::io::{self, Write};
@@ -238,7 +238,13 @@ mod ffi {
 If bitflags are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLONESHOT`does and why it's done that way. Take a look at the [Bitflags](appendix-1/bitflags.md) chapter in the appendix.
 {% endhint %}
 
-Now, I've commented the code to the best of my ability to answer any questions along the way so I won't repeat that here. If we run the code we get:
+Now, I've commented the code to the best of my ability to answer any questions along the way so I won't repeat that here.
+
+you have any questions, you can use the [Issue Tracker for this book](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues) and ask there. Unless you read this many many years after I wrote it, chances are that I, or someone else, can answer you there.
+
+Good job though! We have actually created our own epoll-backed event queue which notifies us on read events on our scokets!
+
+If we run the code we get:
 
 ```text
 RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
@@ -249,9 +255,9 @@ RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
 FINISHED
 ```
 
-**Wait!! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely? 
+**Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely? 
 
-Oh, so you trusted the manpage for Linux did you? Yeah, me too. It turns out it's written for users of the C library and not with `ffi`in mind. In this case that causes a big problem for us.
+Oh, so you trusted the manpage for Linux did you? Yeah, me too. It turns out it's written for users of the C library and not with us which uses `ffi`in mind. In this case that causes a big problem for us.
 
 {% hint style="info" %}
 After a little bit of searching \(well, to be honest it was a lot of searching\) I found out that the manpage doesn't tell the whole truth. The real definition looks like this _\(thanks to user @Talchas on the Rust discord channel for figuring this out\)_:
