@@ -2,7 +2,7 @@
 
 * [The Boring Book About Epoll, Kqueue and IOCP](README.md)
 * [External events and I/O](what-is-epoll-kqueue-and-iocp.md)
-* [An Example To Build Upon](the-basics.md)
+* [An Example We Can Build Upon](the-basics.md)
 * [An event queue recipie](the-recipie-for-an-eventqueue.md)
 * [Designing our API](untitled.md)
 * [Implementing our API](implementing-our-api/README.md)

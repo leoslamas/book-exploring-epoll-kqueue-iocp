@@ -1,4 +1,4 @@
-# An Example To Build Upon
+# An Example We Can Build Upon
 
 Before we go on to create a cross platform library, let's play aorund with an example so it doesn't get too booring too quicly.
 
@@ -240,7 +240,7 @@ If bitflags are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLO
 
 Now, I've commented the code to the best of my ability to answer any questions along the way so I won't repeat that here.
 
-you have any questions, you can use the [Issue Tracker for this book](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues) and ask there. Unless you read this many many years after I wrote it, chances are that I, or someone else, can answer you there.
+If you have any questions, you can use the [Issue Tracker for this book](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues) and ask there. Unless you read this many many years after I wrote it, chances are that I, or someone else, can answer you there.
 
 Good job though! We have actually created our own epoll-backed event queue which notifies us on read events on our scokets!
 
