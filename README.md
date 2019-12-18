@@ -12,10 +12,8 @@ Even though this might be a boring book, I do promise one thing. If you get thro
 
 Of course, my goal is to make this trip we're about to venture on as fun as possible. 
 
-If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and concise introduction to all three of them and a practical way to learn how they work and how you can use them.
-
 {% hint style="info" %}
-This book is developed in the open and there are some resources I'll point you at right away:
+**This book is developed in the open and there are some resources I'll point you at right away:**
 
 \*\*\*\*[**The repository for this Gitbook:**](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp)  
 ****The repository contains the text of this book. Use the [Issue Tracker ](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues)if you have questions or feedback of any kind. If you spot any mistaks, want to suggest changes or otherwise contribute to this book please make a [Pull Request](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/pulls). Feedback and/or contributions are greatly appreciated!
@@ -38,17 +36,21 @@ This book should be interesting if you want to learn more about:
 * How to make raw syscalls on Linux, Macos and Windows
 * How `mio` works
 
-{% hint style="info" %}
-We'll avoid any external dependencies so we make sure we remove as much "magic" as possible to make sure we really understand the tools we use.
-{% endhint %}
+_We'll avoid any external dependencies so we make sure we remove as much "magic" as possible to make sure we really understand the tools we use._
 
 ### What we'll do
 
-We'll create an extremely simple cross platform library which leverages Epoll on Linux, Kqueue on BSD/Macos and IOCP for Windows to read incoming data from a socket. Our main focus is to introduce the different syscalls and the infrastructure we need to create a working event queue.
+We'll create an extremely simple cross platform library which leverages Epoll on Linux, Kqueue on BSD/Macos and IOCP for Windows to read incoming data from a socket. 
+
+We'll introduce the different syscalls and the infrastructure we need to create a working event queue and  look at the considerations we need to make to create a cross platform event queue by providing a common API for all three implementations.
+
+{% hint style="info" %}
+If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and concise introduction to all three of them and a practical way to learn how they work and how you can use them.
+{% endhint %}
 
 ### Disclaimer
 
-This will be an introduction to this subject. The example we write will have a strong focus on create a working but minimal example. There is a ton of edge cases we don't cover, but the most important ones is mentioned in the appendix chapter:[ It's not that easy.](appendix-1/its-not-that-easy.md) Please read that chapter too. 
+This will be an introduction to this subject. The example we write will have a strong focus on create a working but minimal example. There are many edge cases we don't cover, but I try to mention the most important ones in the appendix chapter:[ It's not that easy.](appendix-1/its-not-that-easy.md) Please read that chapter too. 
 
 If there are important omissions I have made which are not mentioned there, consider making creating an [issue ](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues)or a [pull request](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/pulls) to add it.
 
