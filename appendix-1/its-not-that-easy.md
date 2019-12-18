@@ -1,5 +1,5 @@
 ---
-description: We'll if any of this classify as "easy" at all...
+description: Well if any of this classify as "easy" at all...
 ---
 
 # It's not that easy
