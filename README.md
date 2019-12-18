@@ -1,10 +1,16 @@
-# Introduction
+---
+description: Cross Platform Event Queues Explained With Rust
+---
+
+# A Boring Book About Epoll, Kqueue and IOCP
 
 Yep. After spending a couple of hundred hours on this I've concluded that this is actually pretty boring stuff. It's fun to know, but definately boring to learn. 
 
 However, it's very usefull knowledge which can be pretty hard to come by, and it's a big deal if you know this well. I do really hope this is a good introduction which can either serve as a reference or as an inspiration to dig deeper.
 
-So even though this might be a boring book, I do promise you that if you go through and understand everthing we go through here you'll find it extremely fun afterwords.
+Even though this might be a boring book, I do promise one thing. If you get through it all the way to the end, writing your own code along with it and making sure you understand everything, you'll find it extremely fun afterwards. 
+
+Of course, my goal is to make this trip we're about to venture on as fun as possible. 
 
 If you've read about asynchonous programming and how webservers and other high performance asynchronous programs work, you most likely have read that many of them rely on Epoll, Kqueue and IOCP to handle I/O. This book aims to be a short and concise introduction to all three of them and a practical way to learn how they work and how you can use them.
 
@@ -56,7 +62,9 @@ This subject is admittedly pretty difficult \(at leas I think so\). If both Rust
 
 ### Motivation
 
-This is a companion book to my previous book: [The Node Experiment - Explorign Async Basics with Rust](https://cfsamson.github.io/book-exploring-async-basics/). Since both `libuv` and `mio` uses a cross platform eventloop using epoll, kqueue and IOCP under the hood I needed to cover this subject in some detail as well.
+This is a companion book to my previous book: [The Node Experiment - Explorign Async Basics with Rust](https://cfsamson.github.io/book-exploring-async-basics/). Since both `libuv` and `mio` uses a cross platform eventloop using epoll, kqueue and IOCP under the hood I needed to cover this subject in some detail as well. 
+
+It turned out that getting a deeper understanding of this subject was pretty hard with information scattered around and mostly covering one aspect of either Epoll, Kqueue or IOCP. Therefore, I chose to spend some extra time and effort to collect this information and present it here to make it easier for the next person that ventures on the same quest as I did.
 
 ## Status
 
