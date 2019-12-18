@@ -6,7 +6,7 @@ description: Well if any of this classify as "easy" at all...
 
 The funny thing about the excercise in this book is that a lot of the work is setting up the infrastructure to get a running event loop in the first place. Actually adding new functionality is much easier, but to keep this example as short as I can we skip a lot of important things to actually implement a fully working event queue. I'll point some of the ones I consider the most important here.
 
-### Everything in networking is asyncrhonous
+### Everything in networking is asynchronous
 
 In our example we only treat `Read`events on a sockets. In reality, both the opening of a socket, resolving the DNS and writing data to a socket are all blocking tasks. 
 
