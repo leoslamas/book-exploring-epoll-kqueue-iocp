@@ -1,14 +1,10 @@
 # Express conclusion
 
-By just running through our express examples you get an overview over what `Kqueue`, `Epoll`and `IOCP`looks like in real life. There is also one other thing to note:
+By just running through our express examples you get an overview over what `Kqueue`, `Epoll`and `IOCP`looks like in real life. 
 
-* Epoll took 142 lines of code
-* Kqueue took 200 lines of code
-* IOCP took 299 lines of code
+I know it's not a fair comparison based on our express examples since they're so extensively commentated, but in my experience, IOCP is more verbose than the two others and requires a lot more setup to get working. This will be especially apparent when we go through the code in part 2 of our book.
 
-I know it's not a fair comparison since I've added some useful information to i.e. `Kqueue`implementation on how to work with the `timespec`struct and the `IOCP`implementation is so verbose that most function call definitions end up wrapping to new lines.
-
-However it is indicative of my experience. IOCP is more verbose than the two others. 
+However, event though they're all pretty well documented, IOCP has really the best documentation of them. Go and have a look at the [IOCP](appendix-1/iocp.md),  [Epoll](appendix-1/epoll.md) and [Kqueue](appendix-1/kqueue.md) reference pages in the appendix and have a look yourself.
 
 They all work well and have their advantages and disadvantages. The real difficulties start when trying to unite all three into one API to use as a cross platform library.
 

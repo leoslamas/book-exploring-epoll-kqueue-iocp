@@ -234,7 +234,7 @@ mod ffi {
 ```
 
 {% hint style="info" %}
-If bitflags are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLONESHOT`does and why it's done that way. Take a look at the [Bitflags](appendix-1/bitflags.md) chapter in the appendix.
+If [bitflags](appendix-1/bitflags.md) are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLONESHOT`does and why it's done that way. Take a look at the [Bitflags](appendix-1/bitflags.md) chapter in the appendix.
 {% endhint %}
 
 Now, I've commented the code to the best of my ability to answer any questions along the way so I won't repeat that here.
