@@ -2,7 +2,7 @@
 
 The first thing we need to do is to create a library project where we'll organize our code. We'll name our project `minimio.`
 
-Run the following commands to create our project:
+. Now, whether you've read my previous book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.Run the following commands to create our project:
 
 ```text
 mkdir minimio
@@ -14,9 +14,9 @@ cargo init --lib
 
 The first think I like to do when I know roughly what API  I want to use is to start a new project by writing down the API and how I want to use it in an integration test.
 
-For now we only want to cover one use case and that is to provide a event queue we can use in our [examples-node-eventloop](https://github.com/cfsamson/examples-node-eventloop). Now, whether you've read my prevoius book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.
+For now we only want to cover one use case and that is to provide a event queue we can use in our [examples-node-eventloop](https://github.com/cfsamson/examples-node-eventloop)
 
-I've looked into how [mio ](https://github.com/tokio-rs/mio)API as an inspiration but for convenience I've made some compromizes to simplify our code to fit an example.
+I've looked into how [mio ](https://github.com/tokio-rs/mio)API as an inspiration but for convenience I've made some compromises to simplify our code to fit an example.
 
 {% hint style="info" %}
 Reacently, `mio` changed from using IOCP as the backing API on Windows and started using WePoll instead simplifying their implementation greatly. I'll cover WePoll shortly in the end of this book, but for now, just know that I've used [mio v0.6.x](https://github.com/tokio-rs/mio/tree/v0.6.x) version as the inspiration for the code we use in this book for this exact reason so if you go to dive into the source code, make sure to switch to the `v0.6.x`branch.
