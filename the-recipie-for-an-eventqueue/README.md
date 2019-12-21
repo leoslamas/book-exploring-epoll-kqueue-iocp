@@ -4,7 +4,7 @@ description: >-
   surprisingly easy.
 ---
 
-# A cross platform event queue
+# Part 2: A cross platform event queue
 
 In this part of the book we'll implement the `minimio`library, an extremely simplified version of a cross platform event queue.
 

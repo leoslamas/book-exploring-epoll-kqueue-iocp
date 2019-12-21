@@ -1,21 +1,21 @@
 # Bitflags
 
-`flag`. 
-
 Bitflags are also very space-efficient to use since each bit is treated as an option. Manipulating and interpreting these flags uses some of the most basic and optimized instructions on the CPU which makes working with them very fast as well.
 
 ### Bitflags by example
 
 Let's say you have 8 different choices a user can can set. For our example let's say it's a set of toppings on a pizza:
 
-1. Mozzarella
-2. Peccorino
-3. Gorgonzola
-4. Pepperoni
-5. Tomato
-6. Anchovies
-7. Parma ham
-8. Basil
+| Flag | Bit representation |
+| :--- | :--- |
+| Mozzarella | `00000001` |
+| Peccorino | `00000010` |
+| Gorgonzola | `00000100` |
+| Pepperoni | `00001000` |
+| Tomato | `00010000` |
+| Anchovies | `00100000` |
+| Parma ham | `01000000` |
+| Basil | `10000000` |
 
 We can set any combination of these flags, or none. A very space-efficient way of representing these choices is using an `u8`. There are 2^8 different combinations \(256 combinations possible using these 8 toppings\).
 

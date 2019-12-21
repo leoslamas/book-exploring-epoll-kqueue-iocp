@@ -2,11 +2,21 @@
 description: Cross Platform Event Queues Explained With Rust
 ---
 
-# The Boring Book About Epoll, Kqueue and IOCP
+# Epoll, Kqueue and IOCP Explained in Rust
 
-Yep. After spending a couple of hundred hours on this I've concluded that this is actually pretty boring stuff. It's fun to know, but definately boring to learn in detail. 
+This book aims to explain how `Epoll`, `Kqueue`and `IOCP`really works. The book is divided into three:
 
-However, it's very usefull knowledge which can be pretty hard to come by, and it's a big deal if you know this well. I do really hope this is a good introduction which can either serve as a reference or as an inspiration to dig deeper.
+1. Part 1: Express explanation 
+2. Part 2: A cross platform event queue
+3. Appendix
+
+The idea is that if you're only interested in a high level overview, you can read only [Part 1](part-1-an-express-explanation/) and the chapters in the Appendix. After that you'll have gotten to know how to use `Epoll`, `Kqueue`and `IOCP`works, some references to go and read further and gotten some simple examples to run.
+
+If you want to see some of the challenges of implementing a unified API for these three different queues, and create a cross platform library. Well, then dig into [Part 2 ](the-recipie-for-an-eventqueue/)of this book.
+
+Yep. After spending a couple of hundred hours on this I've concluded that this is actually pretty boring stuff. It's fun to know, but definitely boring to learn in detail. 
+
+However, it's very useful knowledge which can be pretty hard to come by, and it's a big deal if you know this well. I do really hope this is a good introduction which can either serve as a reference or as an inspiration to dig deeper.
 
 Even though this might be a boring book, I do promise one thing. If you get through it all the way to the end, writing your own code along with it and making sure you understand everything, you'll find it extremely fun afterwards. 
 

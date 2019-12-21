@@ -30,7 +30,7 @@ However, we don't have everything set up yet. The syscalls expects us to pass in
 
 We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we see that we need two more definitions:
 
-![Click to enlarge](.gitbook/assets/bilde%20%282%29.png)
+![Click to enlarge](../.gitbook/assets/bilde%20%282%29.png)
 
 Namely an `Event` struct and a `Data`union:
 
@@ -234,7 +234,7 @@ mod ffi {
 ```
 
 {% hint style="info" %}
-If [bitflags](appendix-1/bitflags.md) are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLONESHOT`does and why it's done that way. Take a look at the [Bitflags](appendix-1/bitflags.md) chapter in the appendix.
+If [bitflags](../appendix-1/bitflags.md) are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLONESHOT`does and why it's done that way. Take a look at the [Bitflags](../appendix-1/bitflags.md) chapter in the appendix.
 {% endhint %}
 
 Now, I've commented the code to the best of my ability to answer any questions along the way so I won't repeat that here.
