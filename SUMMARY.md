@@ -2,7 +2,6 @@
 
 * [Epoll, Kqueue and IOCP Explained in Rust](README.md)
 * [Part 1: An express explanation](part-1-an-express-explanation/README.md)
-  * [External events and I/O](part-1-an-express-explanation/what-is-epoll-kqueue-and-iocp.md)
   * [Epoll - the express version](part-1-an-express-explanation/the-basics.md)
   * [Kqueue - the express version](part-1-an-express-explanation/kqueue-the-express-version.md)
   * [IOCP - the express version](part-1-an-express-explanation/iocp-the-express-version.md)
