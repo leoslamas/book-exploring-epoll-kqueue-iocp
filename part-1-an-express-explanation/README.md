@@ -11,11 +11,9 @@ description: >-
 
 I/O has one important property: it takes time. And it's not we that's busy, it's some other computer, a disk or some other peripheral that we need to wait on.
 
-Now, to do most I/O operations, we need to go through the operating system. Most systems provides several APIs to accomplish these tasks. Let's divide them into `blocking`and `nonblocking`versions.
+Now, to do most I/O operations, we need to go through the operating sI/O operations are per definition dependent on resources outside our CPU, whether it's the disk drive, the network card or other peripherals. Now, especially in the case of network calls, we're not only dependant on our own hardware, but we're depeinding on resources that might reside far away from our own, causing a significant delay. 
 
 #### Blocking I/O
-
-I/O operations are per definition dependant on resources outside our CPU, whether it's the disk drive, the network card or other perephials. Now, especially in the case of network calls, we're not only dependant on our own hardware, but we're depeinding on resources that might reside far away from our own, causing a significant delay.
 
 When we ask the Operating System to perform a blocking operation it will suspend the thread that makes the call \(it will stop executing code and store the CPU state and go on to do other things\). When data arrives for us through the network it will wake up our thread again and let us resume. 
 
