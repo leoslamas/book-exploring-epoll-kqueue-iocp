@@ -434,8 +434,6 @@ mod ffi {
 
         pub fn WSAGetLastError() -> i32;
     }
-}
-
 
 ```
 

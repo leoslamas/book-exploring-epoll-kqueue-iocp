@@ -97,7 +97,7 @@ use minimio::{Events, Interests, Poll, Registrator, TcpStream};
 The first thing we want to do is to consider how we want to use our API.  More specifically we're going to use a `Reactor`and an `Executor`to create a task, suspend it, wait for a `READABLE`event and then resume and finish our task.
 
 {% hint style="info" %}
-See the chapter named [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md) in the appendix for an explanation of this pattern. Most questions that will be answered there.
+See the chapter named [The Reactor-Executor Pattern](../appendix-1/reactor-executor-pattern.md) in the appendix for an explanation of this pattern. Most questions that will be answered there.
 {% endhint %}
 
 Our library will be used in the `Reactor`so let's focus on that specific part of the code first.

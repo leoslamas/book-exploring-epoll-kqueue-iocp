@@ -231,7 +231,6 @@ mod ffi {
         pub(crate) epoll_data: usize,
     }
 }
-
 ```
 
 {% hint style="info" %}
