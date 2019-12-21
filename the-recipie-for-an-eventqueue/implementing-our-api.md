@@ -1,4 +1,4 @@
-# Implementing our API
+# A brief overview
 
 The first thing we do is to describe and implement the platform-indipendant functionality and the public surface of our library. 
 

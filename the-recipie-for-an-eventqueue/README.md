@@ -6,6 +6,8 @@ description: >-
 
 # A cross platform event queue
 
+In this part of the book we'll implement the `minimio`library, an extremely simplified version of a cross platform event queue.
+
 {% hint style="info" %}
 A brief overview and reference for IOCP, Epoll and Kqueue can be found in the appendix chapters [IOCP Reference](../appendix-1/iocp.md), [Epoll Reference](../appendix-1/epoll.md) and [Kqueue Reference](../appendix-1/kqueue.md). Head over there and take a quick look to get a quick introduction of each of them.
 {% endhint %}

@@ -7,12 +7,12 @@
 * [IOCP - the express version](iocp-the-express-version.md)
 * [Express conclusion](express-conclusion.md)
 * [A cross platform event queue](the-recipie-for-an-eventqueue/README.md)
-  * [Designing our API](the-recipie-for-an-eventqueue/untitled.md)
-* [Implementing our API](implementing-our-api/README.md)
-  * [Public API](implementing-our-api/public-api.md)
-  * [IOCP](implementing-our-api/iocp.md)
-  * [Epoll](implementing-our-api/epoll.md)
-  * [Kqueue](implementing-our-api/kqueue.md)
+  * [Design](the-recipie-for-an-eventqueue/untitled.md)
+  * [A brief overview](the-recipie-for-an-eventqueue/implementing-our-api.md)
+  * [Public API](the-recipie-for-an-eventqueue/public-api.md)
+  * [IOCP](the-recipie-for-an-eventqueue/iocp.md)
+  * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
+  * [Kqueue](the-recipie-for-an-eventqueue/kqueue.md)
 
 ## Appendix <a id="appendix-1"></a>
 

@@ -1,4 +1,4 @@
-# Designing our API
+# Design
 
 The first thing we need to do is to create a library project where we'll organize our code. We'll name our project `minimio.`
 
