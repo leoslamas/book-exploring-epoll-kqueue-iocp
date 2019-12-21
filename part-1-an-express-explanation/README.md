@@ -11,7 +11,7 @@ description: >-
 
 I/O has one important property: it takes time. And it's not we that's busy, it's some other computer, a disk or some other peripheral that we need to wait on.
 
-Now, to do most I/O operations, we need to go through the Operating System. Most systems provides several APIs to accomplish these tasks. Let's divide them into `blocking`and `nonblocking`versions.
+Now, to do most I/O operations, we need to go through the operating system. Most systems provides several APIs to accomplish these tasks. Let's divide them into `blocking`and `nonblocking`versions.
 
 #### Blocking I/O
 
