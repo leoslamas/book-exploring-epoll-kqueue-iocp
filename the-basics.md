@@ -1,4 +1,4 @@
-# An Example We Can Build Upon
+# Epoll - the express version
 
 Before we go on to create a cross platform library, let's play aorund with an example so it doesn't get too booring too quicly.
 
