@@ -741,7 +741,7 @@ If you got all the way here to the conclusion by reading all this code, I'm impr
 
 If you haven't cloned the repo yet or want to have a look at the complete code presented in this chapter check out the [repository.](https://github.com/cfsamson/examples-minimio)
 
-I'll leave you with a link to the full code preseted here:
+I'll leave you with a link to the full code presented here:
 
 {% embed url="https://github.com/cfsamson/examples-minimio/blob/master/src/windows.rs" %}
 
