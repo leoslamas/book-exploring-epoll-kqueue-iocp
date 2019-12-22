@@ -286,6 +286,10 @@ A simplified way of thinking of this is that it has two modes. One is `register`
 
 The other is the `wait`mode where it will request the OS to suspend the thread it's called from and wake it up when some event\(s\) has happened. In this call we pass in an array of zeroed `Kevent`structs which the OS will fill with data about what has ocurred while the thread was suspended.
 
+{% hint style="info" %}
+The fact that we can make multiple changes to the queue using only a single syscall can be an advantage in situations where you have many I/O operations and many calls. A syscall is not cheap and minimizing them can have a noticable effect on performance.
+{% endhint %}
+
 **Running this code on a system running `macos`should give the following result:**
 
 ```text
