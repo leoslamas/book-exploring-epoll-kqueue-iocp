@@ -12,5 +12,5 @@ They all work well and have their advantages and disadvantages. The real difficu
 Note that while `Kqueue`is used on all BSD based operating systems, there seems to be some subtle differences in flag and constant values between the `macos`version and the one for `FreeBSD`. Just keep this in mind if you're not using a crate which provides these constants and definitions for you already like the [libc crate](https://github.com/rust-lang/libc) does.
 {% endhint %}
 
-Creating a cross platform event queue is exactly what the last part of this book will go through.
+Creating a cross platform event queue is exactly what the next part of this book will go through.
 
