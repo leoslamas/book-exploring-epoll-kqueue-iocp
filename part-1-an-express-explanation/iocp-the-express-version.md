@@ -444,7 +444,11 @@ mod ffi {
 
 ```
 
-Some things to make a note of. The `CreateIoCompletionPort`syscall does different things based on the parameters passed in. The first time we call it, we create a new `CompletionPort`. The second time we call it we associate our resource \(in this case our `Socket`\) with the completion port we created.
+Some things to make a note of. The `CreateIoCompletionPort`syscall does different things based on the parameters passed in. The first time we call it, we create a new `CompletionPort`. The second time we call it we associate our resource \(in this case our `Socket`\) with the completion port we created. 
+
+{% hint style="info" %}
+See the [relevant paragraph in the CreateIoCompletionPort documentation](https://docs.microsoft.com/en-us/windows/win32/fileio/createiocompletionport#remarks) for more information about the modes it can be used in.
+{% endhint %}
 
 Next is how we identify different events. When you associate a resource, you can also associate it with a `CompletionKey`which will be returned with every event that has happened on that resource.
 
@@ -453,7 +457,7 @@ The problem with this is that the `CompletionKey`is registered on a _per resourc
 A common way to solve this is using the technique of wrapping the `WSAOVERLAPPED`structure which is registered with each event \(on our case in the `WSARecv`syscall\) in another datastructure which adds context to identify the event that ocurred.
 
 {% hint style="info" %}
-This technique is used both in the [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/detail/win_iocp_io_service.hpp) implementation of `IOCP`and in `mio`. Here is a linkt to the relevant [lines of code in mio's v0.6 branch](https://github.com/tokio-rs/mio/blob/292f26c22603564a21c34de053c6c75a34c6457b/src/sys/windows/selector.rs#L476-L521).
+This technique is used both in the [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/detail/win_iocp_io_service.hpp) implementation of `IOCP`and in `mio`. Here is a linkt to the relevant [lines of code in mio's v0.6 branch](https://github.com/tokio-rs/mio/blob/292f26c22603564a21c34de053c6c75a34c6457b/src/sys/windows/selector.rs#L476-L521) \(mio has recently changed to wepoll which avoids IOCP so we need to look at previous versions to look at the implementation\).
 {% endhint %}
 
 Now, to do that we take advantage of the fact that when we create a structure with the `#[repr(C)]`attribute and add a field of the type `WSAOVERLAPPED`first, the structure will have the same memory layout as a `WSAOVERLAPPED`struct for the first bytes.
