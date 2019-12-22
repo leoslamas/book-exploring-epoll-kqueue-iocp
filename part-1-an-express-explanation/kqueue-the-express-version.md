@@ -1,6 +1,79 @@
 # Kqueue - the express version
 
+Like in the express epoll example we initialize a cargo project and open `main.rs`.
 
+Kqueue has a rather small API surface with only two syscalls to deal with `kqueue`and one for closing the queue. The API looks like this:
+
+```rust
+mod ffi {
+    #[link(name = "c")]
+    extern "C" {
+        /// Returns: positive: file descriptor, negative: error
+        pub(super) fn kqueue() -> i32;
+        
+        pub(super) fn kevent(
+            kq: i32,
+            changelist: *const Kevent,
+            nchanges: i32,
+            eventlist: *mut Kevent,
+            nevents: i32,
+            timeout: *const Timespec,
+        ) -> i32;
+
+        pub fn close(d: i32) -> i32;
+    }
+}
+```
+
+Most of our interactions with our `kqueue`instance happens through the `Kevent`struct. In this struct we pass in information about whether we want to `add`, `modify`or `delete`an interest from our queue. We also specify what kind of events we're interested in. Let's have a look at the other structures and constants in our `ffi`module:
+
+```rust
+pub const EVFILT_READ: i16 = -1;
+pub const EV_ADD: u16 = 0x1;
+pub const EV_ENABLE: u16 = 0x4;
+pub const EV_ONESHOT: u16 = 0x10;
+
+#[derive(Debug)]
+#[repr(C)]
+pub(super) struct Timespec {
+    /// Seconds
+    tv_sec: isize,
+    /// Nanoseconds     
+    v_nsec: usize,
+}
+
+impl Timespec {
+    pub fn from_millis(milliseconds: i32) -> Self {
+        let seconds = milliseconds / 1000;
+        let nanoseconds = (milliseconds % 1000) * 1000 * 1000;
+        Timespec {
+            tv_sec: seconds as isize,
+            v_nsec: nanoseconds as usize,
+        }
+    }
+}
+
+// https://github.com/rust-lang/libc/blob/c8aa8ec72d631bc35099bcf5d634cf0a0b841be0/src/unix/bsd/apple/mod.rs#L497
+// https://github.com/rust-lang/libc/blob/c8aa8ec72d631bc35099bcf5d634cf0a0b841be0/src/unix/bsd/apple/mod.rs#L207
+#[derive(Debug, Clone, Default)]
+#[repr(C)]
+pub struct Kevent {
+    pub ident: u64,
+    pub filter: i16,
+    pub flags: u16,
+    pub fflags: u32,
+    pub data: i64,
+    pub udata: u64,
+}
+```
+
+Here we see the definition of the `Kevent`structure. If we look at the manpage for `kevent`we find some more information about this structure:
+
+![Click to enlarge](../.gitbook/assets/bilde%20%283%29.png)
+
+You can find more information on the [macos manpage for `kevent`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/kevent.2.html). One thing to note is that the `udata`field can be used to store any user defined data. The OS leaves this untouched so it doesn't need to be a valid pointer. In our example code we use a regular `usize`to identify each event.
+
+Let's put this all together and see how these syscalls are used:
 
 ```rust
 use std::io::{self, Write};
@@ -205,7 +278,15 @@ mod ffi {
 }
 ```
 
-Running this code on a system running `macos`should give the following result:
+I've chosen to comment everything in the code so if you paste this into your own program you'll still have all information you need.
+
+There are however something I want to point out specifically. The call to `kevent`behaves very differently from the calls we see in `epoll`and `IOCP`in that it behaves differently based on what arguments are passed in. 
+
+A simplified way of thinking of this is that it has two modes. One is `register`mode, where we pass in a set of changes we want to make to our queue in the `changelist`field. 
+
+The other is the `wait`mode where it will request the OS to suspend the thread it's called from and wake it up when some event\(s\) has happened. In this call we pass in an array of zeroed `Kevent`structs which the OS will fill with data about what has ocurred while the thread was suspended.
+
+**Running this code on a system running `macos`should give the following result:**
 
 ```text
 RECIEVED: 4
