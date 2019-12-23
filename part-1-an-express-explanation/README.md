@@ -11,7 +11,11 @@ description: >-
 
 I/O has one important property: it takes time. And it's not we that's busy, it's some other computer, a disk or some other peripheral that we need to wait on.
 
-Now, to do most I/O operations, we need to go through the operating sI/O operations are per definition dependent on resources outside our CPU, whether it's the disk drive, the network card or other peripherals. Now, especially in the case of network calls, we're not only dependant on our own hardware, but we're depeinding on resources that might reside far away from our own, causing a significant delay. 
+Now, to do most I/O operations, we need to go through the operating sI/O operations are per definition dependent on resources outside our CPU, whether it's the disk drive, the network card or other peripherals. Now, especially in the case of network calls, we're not only dependent on our own hardware, but we're depending on resources that might reside far away from our own, causing a significant delay. 
+
+{% hint style="info" %}
+If all this is relatively new to you, I have written a whole book about basic concurrency. Especially two chapters should be interesting to read before you go on. [Interrupts, Firmware and I/O](https://cfsamson.github.io/book-exploring-async-basics/4_interrupts_firmware_io.html) and [Strategies for handling I/O](https://cfsamson.github.io/book-exploring-async-basics/5_strategies_for_handling_io.html).
+{% endhint %}
 
 #### Blocking I/O
 
@@ -35,7 +39,7 @@ Even though this might be configured on some systems, the stack each thread need
 
 #### Context switches and overhead
 
-Even though the OS is pretty good at running many threads concurrently context switches has some overhead, but the real cost lies in creting new threads which involves a lot of bookkeeping and setup related to security. We could alleviate this slightly by using a threadpool. A threadpool it's still not optimal in the typical usecase when we have a huge amount of small tasks which are mostly waiting, or if the number of tasks \(the load\) varies a lot.
+Even though the OS is pretty good at running many threads concurrently context switches has some overhead, but the real cost lies in creating new threads which involves a lot of bookkeeping and setup related to security. We could alleviate this slightly by using a threadpool. A thread pool it's still not optimal in the typical usecase when we have a huge amount of small tasks which are mostly waiting, or if the number of tasks \(the load\) varies a lot.
 
 ### Epoll/Kqueue/IOCP
 

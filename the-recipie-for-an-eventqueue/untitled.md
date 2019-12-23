@@ -2,7 +2,7 @@
 
 The first thing we need to do is to create a library project where we'll organize our code. We'll name our project `minimio.`
 
-. Now, whether you've read my previous book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.Run the following commands to create our project:
+Now, whether you've read my previous book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.Run the following commands to create our project:
 
 ```text
 mkdir minimio
