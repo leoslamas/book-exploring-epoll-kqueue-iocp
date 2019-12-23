@@ -8,7 +8,7 @@ Since `Epoll`, `Kqueue`and `IOCP`all have different API's \(and part of this boo
 If you're on Windows I suggest you use [WSL ](https://docs.microsoft.com/en-us/windows/wsl/install-win10)to follow along on this part of the book.
 {% endhint %}
 
-Let's start by fiering up a new project by creating a new folder and initialize a project. Move straight in to the `main.rs`file.
+Let's start by firing up a new project by creating a new folder and initialize a project. Move straight in to the `main.rs`file.
 
 Just leave the `main` function for now and declare a new module beneath it. Next we add the `extern`function definitions we'll use to make the syscalls we need to use `epoll`on Linux:
 
