@@ -8,7 +8,7 @@ Since `Epoll`, `Kqueue`and `IOCP`all have different API's \(and part of this boo
 If you're on Windows I suggest you use [WSL ](https://docs.microsoft.com/en-us/windows/wsl/install-win10)to follow along on this part of the book.
 {% endhint %}
 
-Let's start by fiering up a new project by creating a new folder and initialize a project. Move straight in to the `main.rs`file.
+Let's start by firing up a new project by creating a new folder and initialize a project. Move straight in to the `main.rs`file.
 
 Just leave the `main` function for now and declare a new module beneath it. Next we add the `extern`function definitions we'll use to make the syscalls we need to use `epoll`on Linux:
 
@@ -30,7 +30,7 @@ However, we don't have everything set up yet. The syscalls expects us to pass in
 
 We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we see that we need two more definitions:
 
-![Click to enlarge](../.gitbook/assets/bilde%20%282%29.png)
+![Click to enlarge](../.gitbook/assets/bilde%20%286%29.png)
 
 Namely an `Event` struct and a `Data`union:
 
@@ -256,7 +256,7 @@ FINISHED
 
 **Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely? 
 
-Oh, so you trusted the manpage for Linux did you? Yeah, me too. It turns out it's written for users of the C library and not with us which uses `ffi`in mind. A valuable lesson to keep in mind. In this case that causes a big problem for us.
+Oh, so you trusted the manpage for Linux did you? Yeah, me too. It turns out it's written for users of the C library and not with people using `ffi`in mind. A valuable lesson to keep in mind. In this case that causes a big problem for us.
 
 {% hint style="info" %}
 After a little bit of searching \(well, to be honest it was a lot of searching\) I found out that the manpage doesn't tell the whole truth. The real definition looks like this _\(thanks to user @Talchas on the Rust discord channel for figuring this out\)_:
@@ -295,5 +295,5 @@ RECIEVED: Event { events: 1, epoll_data: 1 }
 FINISHED
 ```
 
-Now that we have seen how `epoll`works in real life, let's move on to actually create a cross platform event queue which will also introduce `kqueue`and `IOCP`so we'll learn the basics of how they work as well.
+Now that we have seen how `epoll`works in real life, let's move on and have a look at `kqueue`and `IOCP`so we'll learn the basics of how they work as well.
 
