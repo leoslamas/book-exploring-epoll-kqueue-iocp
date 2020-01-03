@@ -90,15 +90,14 @@ We'll focus on a brief and quick introduction in how and why this matters to us:
 Let's start with a very naive and unsafe way of doing this and have a look at the different options we have and why we use them. This will be the example that we improve in a few steps while trying to explain along the way.
 
 ```rust
-use std::thread;
+#![feature(asm)]
 
+use std::thread;
 static mut LOCKED: bool = false;
 static mut COUNTER: usize = 0;
 
 pub fn test(inc: usize) -> usize {
-    while unsafe { LOCKED } {
-    }
-    
+    while unsafe { LOCKED } {}
     unsafe { LOCKED = true };
     unsafe { COUNTER += inc};
     unsafe { LOCKED = false };
@@ -106,26 +105,28 @@ pub fn test(inc: usize) -> usize {
 }
 
 fn main() {
-    let t1 = thread::spawn(move || {
-        let mut prevent_optimization = Vec::with_capacity(100_000);
-        for _ in 0..100_000 {
-            let res = test(1);
-            prevent_optimization.push(res);
-        }
-    });
+    let mut handles = vec![];
+    for i in 0..5 {
+        let handle = thread::spawn(move || {
+            let mut prevent_optimization = Vec::with_capacity(100_000);
+            for _ in 0..100_000 {
+                let res = test(1);
+                prevent_optimization.push(res);
+            }
+            let last_val = prevent_optimization.last().unwrap();
+            println!("{} finished. Last value: {}", i + 1, last_val);
+        });
 
-    let mut prevent_optimization = Vec::with_capacity(100_000);
-    let t2 = thread::spawn(move || {
-        for _ in 0..100_000 {
-            let res = test(1);
-            prevent_optimization.push(res);
-        }
-    });
+        handles.push(handle);
+    }
 
-    t1.join().unwrap();
-    t2.join().unwrap();
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
     println!("{}", unsafe { COUNTER });
 }
+
 ```
 
 The code simply providing two global constants. A flag indicating if we have a "lock" on the `COUNTER`and a counter we want to increase. We expect this counter to be at 200 000 once the program is finished. 
@@ -134,7 +135,7 @@ The code simply providing two global constants. A flag indicating if we have a "
 We need to let the function return a value and store that value to prevent the compiler to optimizing away the entire loop in `release`builds. If we don't do that the compiler is smart enough to simply replace the entire loop with a simple `100_000*1`instruction. This results in two threads adding 100\_000 to our `COUNTER` and that's not enoguh to show what we want.
 {% endhint %}
 
-Let's run this with both a debug build and a release build:Finished dev \[unoptimized + debuginfo\] target\(s\) in 0.01s
+Let's run this with both a debug build and a release build:
 
 {% tabs %}
 {% tab title="Debug" %}
@@ -156,7 +157,7 @@ OK, so the debug build gave us a count of 126 093. Pretty far off. The release b
 
 The reason for this is that both thread reads and writes to the same memory address. You see, each core has a small cache called the `L1`cache which is not shared with the other cores. What happens is basically what I try to show in this figure:
 
-![](../.gitbook/assets/bilde%20%285%29.png)
+![](../.gitbook/assets/bilde%20%288%29.png)
 
 Both caches holds the same value for the `COUNTER`and increments that, which of course results in the exact same number. Then in random order they overwrite each others data with the same value. This happens most of the time but not all of the time, so that's why we'll see the number above 100 000, but less than 200 000.
 
@@ -166,6 +167,12 @@ Let's try to make our code a little bit better by introducing atomics:
 
 ### A slightly better counter - introducing atomics
 
+Atomics are not special data types in the eyes of the CPU. CPU's mostly deal with integers of different sizes. However, when we use atomics the compiler knows we are dealing with data which it can't reorder freely, and in addition we get access to some special instructions on the CPU we'll use later on. These instructions introduce memory barriers which can help us safely share and synchronize data between cores.
+
+{% hint style="info" %}
+In the following examples, the `main`function stays the same as in the first one so I omit that here.
+{% endhint %}
+
 ```rust
 use std::thread;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -173,13 +180,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 static LOCKED: AtomicBool = AtomicBool::new(false);
 static mut COUNTER: usize = 0;
 
-pub fn test(inc: usize) {
-    while LOCKED.load(Ordering::Relaxed) {
-    }
+pub fn test(inc: usize) -> usize {
+    while LOCKED.load(Ordering::Relaxed) {}
     LOCKED.store(true, Ordering::Relaxed);
-    unsafe { COUNTER += inc};
-    
+    unsafe { COUNTER += inc };
     LOCKED.store(false, Ordering::Relaxed);
+    unsafe { COUNTER }
 }
 
 fn main() {
@@ -187,9 +193,15 @@ fn main() {
 }
 ```
 
+The results from running this code is:
 
+We know the compiler knows we're dealing with atomics, but let's have a look at what instructions the CPU get when it comes to aquire the lock:
 
-![](../.gitbook/assets/bilde%20%284%29.png)
+![](../.gitbook/assets/bilde%20%285%29.png)
+
+{% hint style="info" %}
+The assembly output is retrived by using the [Rust Playground](https://play.rust-lang.org/). We only look at the assembly output from the `release`builds.
+{% endhint %}
 
 ### An even better counter - using cmpex instruction
 
@@ -200,11 +212,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 const LOCKED: AtomicBool = AtomicBool::new(false);
 static mut COUNTER: usize = 0;
 
-pub fn test(inc: usize) {
-    while LOCKED.compare_and_swap(false, true, Ordering::Relaxed) {
-    }
+pub fn test(inc: usize) -> usize {
+    while LOCKED.compare_and_swap(true, false, Ordering::Relaxed) { }
     unsafe { COUNTER += inc};
     LOCKED.store(false, Ordering::Relaxed);
+    unsafe { COUNTER }
 }
 
 fn main() {
@@ -225,10 +237,11 @@ use std::sync::atomic::{AtomicBool, Ordering, fence};
 static LOCKED: AtomicBool = AtomicBool::new(false);
 static mut COUNTER: usize = 0;
 
-pub fn test(inc: usize) {
+pub fn test(inc: usize) -> usize {
     while LOCKED.compare_and_swap(false, true, Ordering::Acquire) {}
     unsafe { COUNTER += inc };
     LOCKED.store(false, Ordering::Release);
+    unsafe { COUNTER }
 }
 
 fn main() {
@@ -238,5 +251,5 @@ fn main() {
 
 Let's have a look at the assembly output
 
-![](../.gitbook/assets/bilde%20%282%29.png)
+![](../.gitbook/assets/bilde%20%2813%29.png)
 
