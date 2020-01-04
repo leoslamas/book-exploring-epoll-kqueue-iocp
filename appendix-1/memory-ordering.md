@@ -1,45 +1,87 @@
 # Memory ordering
 
-In our library we have the following code to avoid registering interest in new events to an event queue which has recieved a close signal:
+When writing code for multiple threads there are several subtle things we need to consider. You see, both compilers and CPU's reorder the code we write if they think it will lead to faster execution. In single threaded programs, this is not something we need to consider, but once we start writing multithreaded programs the compiler reordering can get us into truble.
 
-```rust
-pub fn register(
-    &self,
-    soc: &mut TcpStream,
-    token: usize,
-    interests: Interests,
-) -> io::Result<()> {
-    if self.is_poll_dead.load(Ordering::SeqCst) {
-        return Err(io::Error::new(
-            io::ErrorKind::Interrupted,
-            "Poll instance is dead.",
-        ));
-    }
-    
-    // WHAT HAPPENS IF ANOTHER THREAD CLOSES THE LOOP AT THIS EXACT MOMENT?
-    
-    ffi::create_io_completion_port(soc.as_raw_socket(), self.completion_port, 0)?;
+However, while the compiler ordering is possible to check by looking at the disassembled code, things get much more difficult on systems with multiple CPUs.
 
-    let op = ffi::Operation::new(token);
-    soc.operations.push_back(op);
+When threads are run on different CPUs, the internal reordering of instruction on the CPU can lead to some very hard to debug problems since we mostly observe the side effects of CPU reordering, speculative execution, pipelining and caching. 
 
-    if interests.is_readable() {
-        ffi::wsa_recv(
-            soc.as_raw_socket(),
-            &mut soc.wsabuf,
-            soc.operations.back_mut().unwrap(),
-        )?;
-    } else {
-        unimplemented!();
-    }
+Let's start at the bottom and work our way up to a better understanding.
 
-    Ok(())
-}
+{% hint style="info" %}
+I'll skip compiler reordering since it's pretty easy to understand. Just know that your code most likely will not be compiled chronologically the way you write it. However, this only applies to code that can correctly be reordered. Code that depends on previous steps will of course not be reordered at random.
+{% endhint %}
+
+### CPU Caches
+
+We normally assume a CPU has three levels of caching. L1, L2, and L3. While L2, and L3 are shared between cores, L1 is a per core cache. Our challenges start here.
+
+The L1 cache uses a sort of [MESI caching protocol](https://en.wikipedia.org/wiki/MESI_protocol). While the name might sound mysterious, it's actually pretty simple. It is an acronym for the different state an item in the cache can find themselves in:
+
+```text
+(M) Modified - modified (dirty). Need to write back data to main memory.
+(E) Exclusive - only exists in this cache. Does not ned to be synced (clean).
+(S) Shared - might exist in other caches. Is current with main memory (clean).
+(I) Invalid - cache line is invalid. Another cache has modified it.
 ```
 
-When writing code for multiple threads there are several subtle things we need to consider. In the case of this exact code, what happens if we were to have several registrators on different threads and one is closing the loop at the same time another is registering an interest?
+{% hint style="info" %}
+**Does this sound familiar?**
 
-Well, while we do check that the `Poll`instance is not dead before we register an event there is nothing in our code which prevents another thread to aquire the `is_poll_dead`flag before we're finised with registering an event. In which case we'll wait for a notification that never occurs.
+In rust we have two kind of references `&`shared references, and `&mut`exclusive refrences. This does indeed map very well to the E and S, two of the possible states data can have in the L1 Cache. Modelling this in the language can \(and does\) provide the possibility of optimizations which languages without these semantics can't do. 
+
+In Rust, only memory which is `Exclusive`can be modified by default. 
+{% endhint %}
+
+Ok, so we can model this for ourselves by thinking that every cache line in the CPU has an `enum`with four states attached to them.
+
+### Inter Processor Communication
+
+So, if a cache line is invalidated if the data exists in a different cache and is modified there, there must be some way for the processors to communicate with each other?
+
+The answer is yes. However, it's pretty hard to find documentation about the exact details, each CPU has what we can think of as a _mailbox_.
+
+This mailbox is what's important for us when we're going to talk about atomics later on. This mailbox can buffer a certain number of messanges. Each message is saved here to avoid interrupting the CPU all the time. Now, at some point the CPU either checks this mailbox, or I've also seen talks about designs which issues an interrupt to the CPU when it needs to process messages.
+
+Let's take an example of a cache line which is marked as `Shared`. If a CPU modifies this cache line, it is invalid, so the rest of the CPU's gets a message in their inbox to mark this cache line as invalid, and fetch the correct value from main memory \(or L2/L3 cache\).
+
+### Memory Ordering
+
+Now that we have some idea of how the CPU's are designed to coordinate between them, we can talk about different memory orderings and what they mean:
+
+In Rust the memory ordering is represented by the  [std::sync::atomic::Ordering](https://doc.rust-lang.org/std/sync/atomic/enum.Ordering.html) enum, which has 5 possible values:
+
+### Relaxed
+
+No messages are sent or retrieved and proccessed from the inbox before this operation. This is therefore the weakest of the possible memory orderings. It implies that the operation does not do any specific synchronization with the other CPUs.
+
+### Acquire
+
+All messages in the inbox are read and proccessed from the inbox before the operation. This means that all cache lines any other CPU has modified, is marked as `Invalidated`meaning that we'll need to fetch new values from memory if our operation involves reading such a value. For this exact reason, `Acquire`only makes sense in _load_ operations. **Most `atomic`methods in rust which involves stores will panic if you pass inn `Acquire`as the memory ordering of a `store`operation.**
+
+### Release
+
+All pending messages on the CPU are flushed and sent to the other CPUs mailboxes. This is most likely values which was `Shared`but we have modified, so they're now marked as `Modified`in our cache. Before we proceed with any operation, we flush the changes to this data to main memory and sends a message to all the others that they'll need to mark this cache line as `Invalid`. `Release`memory ordering only makes sense on `store`operation. **For this reason, and opposite of the `Acquire`ordering, most `load`methods in Rust will panic if you pass in a `Release`ordering.**
+
+### AcqRel
+
+First process all messages in the inbox \(as we do in `Acquire`\) and them flush changes and notify the other CPUs about changes we have made \(as we do in `Release`\).
+
+### SeqCst
+
+Same as `AcqRel`but it also preserves an sequentially consistent order between operations that are marked with `SeqCst`. It's a bit hard to understand, but think of it like special messages which are marked with a timestamp. The timestamp is only attached with messages sent to the Mailbox of the CPU from a thread which did an `AcqRel`as a part of `SeqCst`. This timestamp is only read if you are are performing a `AcqRel`as a part of a `SeqCst`operation yourselves. You order them from frist to last and process them that way. 
+
+If you have three threads, A, B and C. All performing `SeqCst`operations on the same memory, they'll all read each other messages in order. Thereby agreeing on what happened in which order.
+
+One important thing to note is that if there is any `Acquire`, `Release`or `Relaxed`operations on this memory, the sequential consistency is lost since there is no way to know when that operation happened and thereby agree on a total order of operations.
+
+**SeqCst is the strongest of the memory orderings, it also has a slightly higher cost than the others.**
+
+{% hint style="info" %}
+I have a hard time coming up with a good example where this ordering is the only one that solves the problem, and which can't be solved by using the weaker orderings. 
+
+_However, reasoning about `Acquire`and `Release`in complex scenarios can be hard. If you only use `SeqCst`on a part of memory you'll know that you have the strongest memory ordering and you're likely on the "safe side". It makes working with atomics a lot more convenient._
+{% endhint %}
 
 To be able to solve this we need to learn a bit about multithreaded code and synchronization.
 
