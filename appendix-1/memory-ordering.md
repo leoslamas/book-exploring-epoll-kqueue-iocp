@@ -6,6 +6,10 @@ However, while the compiler ordering is possible to check by looking at the disa
 
 When threads are run on different CPUs, the internal reordering of instruction on the CPU can lead to some very hard to debug problems since we mostly observe the side effects of CPU reordering, speculative execution, pipelining and caching. 
 
+{% hint style="warning" %}
+The problem atomics solve are related to memory loads and stores. Any reordering of instructions which does not operate on shared memory has no impact we're concerned about here.
+{% endhint %}
+
 Let's start at the bottom and work our way up to a better understanding.
 
 {% hint style="info" %}
@@ -39,11 +43,11 @@ Ok, so we can model this for ourselves by thinking that every cache line in the 
 
 So, if a cache line is invalidated if the data exists in a different cache and is modified there, there must be some way for the processors to communicate with each other?
 
-The answer is yes. However, it's pretty hard to find documentation about the exact details, each CPU has what we can think of as a _mailbox_.
+Yes there is, however, it's pretty hard to find documentation about the exact details. Each CPU has what we can think of as a _mailbox_.
 
-This mailbox is what's important for us when we're going to talk about atomics later on. This mailbox can buffer a certain number of messanges. Each message is saved here to avoid interrupting the CPU all the time. Now, at some point the CPU either checks this mailbox, or I've also seen talks about designs which issues an interrupt to the CPU when it needs to process messages.
+This mailbox is what's important for us when we're going to talk about atomics later on. This mailbox can buffer a certain number of messenges. Each message is buffered here to avoid interrupting the CPU all the time. Now, at some point the CPU checks this mailbox \(I've also seen talks about designs which issues an interrupt to the CPU when it needs to process messages\) and updates it's cache accordingly.
 
-Let's take an example of a cache line which is marked as `Shared`. If a CPU modifies this cache line, it is invalid, so the rest of the CPU's gets a message in their inbox to mark this cache line as invalid, and fetch the correct value from main memory \(or L2/L3 cache\).
+Let's take an example of a cache line which is marked as `Shared`. If a CPU modifies this cache line, it is invalidated in the other caches. The core that modified the data sends a message to rest of the CPU's. When the other cores check their inbox they see that this cache line is now invalid and the state is updated accordingly in each cache. The cache then fetches the correct value from main memory \(or L2/L3 cache\) and sets it's state to `Shared`again.
 
 ### Memory Ordering
 
@@ -53,37 +57,41 @@ In Rust the memory ordering is represented by the  [std::sync::atomic::Ordering]
 
 ### Relaxed
 
-No messages are sent or retrieved and proccessed from the inbox before this operation. This is therefore the weakest of the possible memory orderings. It implies that the operation does not do any specific synchronization with the other CPUs.
+No messages are forced to be sent or retrieved & processed from the inbox before this operation. This is therefore the weakest of the possible memory orderings. It implies that the operation does not do any specific synchronization with the other CPUs.
 
 ### Acquire
 
-All messages in the inbox are read and proccessed from the inbox before the operation. This means that all cache lines any other CPU has modified, is marked as `Invalidated`meaning that we'll need to fetch new values from memory if our operation involves reading such a value. For this exact reason, `Acquire`only makes sense in _load_ operations. **Most `atomic`methods in rust which involves stores will panic if you pass inn `Acquire`as the memory ordering of a `store`operation.**
+All messages in the inbox of the current CPU are read and processed before the next operation. This means that all cache lines any other CPU has modified, is marked as `Invalid`meaning that we'll need to fetch new values from memory if our operation involves reading such a value. For this exact reason, `Acquire`only makes sense in _load_ operations. **Most `atomic`methods in rust which involves stores will panic if you pass inn `Acquire`as the memory ordering of a `store`operation.**
 
 ### Release
 
-All pending messages on the CPU are flushed and sent to the other CPUs mailboxes. This is most likely values which was `Shared`but we have modified, so they're now marked as `Modified`in our cache. Before we proceed with any operation, we flush the changes to this data to main memory and sends a message to all the others that they'll need to mark this cache line as `Invalid`. `Release`memory ordering only makes sense on `store`operation. **For this reason, and opposite of the `Acquire`ordering, most `load`methods in Rust will panic if you pass in a `Release`ordering.**
+All pending messages on the CPU are flushed and sent to the other CPUs mailboxes before we perform the nest operation. This is most likely values which was `Shared`but we have been modified, so they're now marked as `Modified`in the cache of the current CPU. Before we proceed with any operation, we flush the changes made to main memory and sends a message to all the other cores that they'll need to mark this cache line as `Invalid`. `Release`memory ordering only makes sense on `store`operation. **For this reason, and opposite of the `Acquire`ordering, most `load`methods in Rust will panic if you pass in a `Release`ordering.**
 
 ### AcqRel
 
-First process all messages in the inbox \(as we do in `Acquire`\) and them flush changes and notify the other CPUs about changes we have made \(as we do in `Release`\).
+First process all messages in the inbox \(as we do in `Acquire`\), then then flush changes and notify the other CPUs so they can update their caches \(as we do in `Release`\).
 
 ### SeqCst
 
-Same as `AcqRel`but it also preserves an sequentially consistent order between operations that are marked with `SeqCst`. It's a bit hard to understand, but think of it like special messages which are marked with a timestamp. The timestamp is only attached with messages sent to the Mailbox of the CPU from a thread which did an `AcqRel`as a part of `SeqCst`. This timestamp is only read if you are are performing a `AcqRel`as a part of a `SeqCst`operation yourselves. You order them from frist to last and process them that way. 
+Same as `AcqRel`but it also preserves an sequentially consistent order between operations that are marked with `SeqCst`. It's a bit hard to understand, but think of it like special messages which are marked with a timestamp. 
 
-If you have three threads, A, B and C. All performing `SeqCst`operations on the same memory, they'll all read each other messages in order. Thereby agreeing on what happened in which order.
+The timestamp is only attached with messages sent to us from a CPU which did an `AcqRel`as a part of `SeqCst`. We only read this timestamp if we are performing a `AcqRel`as a part of a `SeqCst`operation ourselves, and we order these messages chonologically based on their timestamp. 
+
+If we have three cores, A, B and C. All performing `SeqCst`operations on the same memory. Since all of them sort the messages chonologically, they will all read the messages in the order from first to last. The three cores can thereby agree on what happened in which order.
 
 One important thing to note is that if there is any `Acquire`, `Release`or `Relaxed`operations on this memory, the sequential consistency is lost since there is no way to know when that operation happened and thereby agree on a total order of operations.
 
 **SeqCst is the strongest of the memory orderings, it also has a slightly higher cost than the others.**
 
 {% hint style="info" %}
-I have a hard time coming up with a good example where this ordering is the only one that solves the problem, and which can't be solved by using the weaker orderings. 
+I have a hard time coming up with a good example where this ordering is the only one that solves a certain problem.  Most synchronization can be solved by using the weaker orderings. 
 
 _However, reasoning about `Acquire`and `Release`in complex scenarios can be hard. If you only use `SeqCst`on a part of memory you'll know that you have the strongest memory ordering and you're likely on the "safe side". It makes working with atomics a lot more convenient._
 {% endhint %}
 
-To be able to solve this we need to learn a bit about multithreaded code and synchronization.
+{% hint style="warning" %}
+Since these synchonizations happen before the nest operation, and we force the core we're currently running on to synchronize it's cache with the other cores we call these operations `memory fences`or `memory barriers`.
+{% endhint %}
 
 ### Atomics
 
