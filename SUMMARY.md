@@ -22,5 +22,5 @@
 * [Epoll Reference](appendix-1/epoll.md)
 * [Kqueue Reference](appendix-1/kqueue.md)
 * [It's not that easy](appendix-1/its-not-that-easy.md)
-* [Memory ordering](appendix-1/memory-ordering.md)
+* [Atomics in Rust](appendix-1/atomics-in-rust.md)
 
