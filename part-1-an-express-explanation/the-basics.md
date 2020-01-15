@@ -1,6 +1,6 @@
 # Epoll - the express version
 
-Before we go on to create a cross platform library, let's play around with an example so it doesn't get boring too quickly.
+Before we go on to create a cross platform library, let's play aorund with an example so it doesn't get too booring too quicly.
 
 Since `Epoll`, `Kqueue`and `IOCP`all have different API's \(and part of this book is showing a bit of all of them\), let's keep things simple in the start and start by just looking at `Epoll`.
 
@@ -24,9 +24,9 @@ mod ffi {
 }
 ```
 
-We use `[link(name = "c")]`to tell the linker what library we want to link to, so we're able to call the functions on which is defined in the `extern "C"`block. The `C`in `extern "C"`tells the compiler that we'll use the "C" calling convention \(which we'll need to use when using the C API on Linux\).
+We use `[link(name = "c")]`to tell the linker what library we want to link to an call the functions on which is defined in the `extern "C"`block. The `C`in `extern "C"`tells the compiler that we'll use the "C" calling convention \(which we'll need to use when using the C API on Linux\).
 
-However, we don't have everything set up yet. The syscalls expects us to pass in more than just primitives. It expects some data structures we need to define as well.
+However, we don't have everything set up yet. The syscalls expects us to pass in more than just primitives. It expects some datastructures we need to define as well.
 
 We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we see that we need two more definitions:
 
@@ -50,7 +50,7 @@ pub struct Event {
 }
 ```
 
-The `Event` struct is pretty familiar, right? However, the `Data` union is not something we use in Rust on a daily basis. What is that?
+So the `Event` struct is pretty familiar, right? However, the `Data` union is not something we use in Rust on a daily basis. What is that?
 
 From the [Rust Reference on Unions](https://doc.rust-lang.org/reference/items/unions.html):
 
@@ -58,13 +58,13 @@ From the [Rust Reference on Unions](https://doc.rust-lang.org/reference/items/un
 The key property of unions is that all fields of a union share common storage. As a result writes to one field of a union can overwrite its other fields, and size of a union is determined by the size of its largest field.
 {% endhint %}
 
-So, this sounds a lot like `Enums`right? Turns out that they're not all that different. `Enums`can be thought of as a kind of "tagged" `union`. It requires slightly more space since it needs to carry the information about what kind was last written to the `union`but that's about all the difference there is.
+So this sounds a lot like `Enums`right? Turns out that they're not all that different. `Enums`can be thought of as a kind of "tagged" `union`. It requires slightly more space since it needs to carry the information about what kind was last written to the `union`but that's about all the difference there is.
 
-Getting data from a C Union is always unsafe since we have no way of knowing that we have valid data for the type we read into. Fortunately, the `epoll_data`field is a field we provide the data for, so we can of course know what data we pass in.
+Getting data from a C Union is always unsafe since we have no way of knowing that we have valid data for the type we read into. Fortunately, the `epoll_data`field is a field we provide the data for so we can of course know what data we pass in.
 
-Honestly, we could just use a plain `u64`here. A `C`union will write its data from the first byte anyway so the memory layout of a `Data.uint64`and a `u64`will be the same.
+Honestly, we could just use a plain `u64`here. A `C`union will write it's data from the first byte anyways so the memory layout of a `Data.uint64`and a `u64`will be the same.
 
-It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use an`usize` that should work. 
+It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use and `usize` and that should work. 
 
 Let's avoid using a `union`here and change our `ffi`module to look like this:
 
@@ -86,7 +86,7 @@ mod ffi {
 }
 ```
 
-Nice! So, let's create a `epoll`queue and use it to wait for a response to a slow server. This is the fun part!
+Nice! So, let's create an `epoll`queue and use it to wait for a response to a slow server. This is the fun part!
 
 ```rust
 use std::io::{self, Write};
@@ -237,11 +237,11 @@ mod ffi {
 If [bitflags](../appendix-1/bitflags.md) are new to you and you want to know what `ffi::EPOLLIN | ffi::EPOLLONESHOT`does and why it's done that way. Take a look at the [Bitflags](../appendix-1/bitflags.md) chapter in the appendix.
 {% endhint %}
 
-Now, I've commented the code to the best of my ability to answer any questions along the way, so I won't repeat that here.
+Now, I've commented the code to the best of my ability to answer any questions along the way so I won't repeat that here.
 
-If you have any questions, you can use the [Issue Tracker for this book](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues) and ask there. Unless you read this many years after I wrote it, chances are that I, or someone else, can answer you there.
+If you have any questions, you can use the [Issue Tracker for this book](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues) and ask there. Unless you read this many many years after I wrote it, chances are that I, or someone else, can answer you there.
 
-Good job! We have actually created our own epoll-backed event queue which notifies us on read events on our sockets!
+Good job though! We have actually created our own epoll-backed event queue which notifies us on read events on our scokets!
 
 If we run the code we get:
 
@@ -256,7 +256,7 @@ FINISHED
 
 **Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely? 
 
-Oh, so you trusted the manpage for Linux, did you? Yeah, me too. It turns out it's written for users of the C library and not with people using `ffi`in mind. A valuable lesson to keep in mind. In this case that causes a big problem for us.
+Oh, so you trusted the manpage for Linux did you? Yeah, me too. It turns out it's written for users of the C library and not with people using `ffi`in mind. A valuable lesson to keep in mind. In this case that causes a big problem for us.
 
 {% hint style="info" %}
 After a little bit of searching \(well, to be honest it was a lot of searching\) I found out that the manpage doesn't tell the whole truth. The real definition looks like this _\(thanks to user @Talchas on the Rust discord channel for figuring this out\)_:
@@ -271,7 +271,7 @@ epoll_data_t data;  /* User data variable */
 
 The `__EPOLL_PACKED` directive was not in the manpage. This means that the struct is not padded which would normally be the case when declaring a 32-bit sized data type before a 64-bit sized datatype. The first 4 bytes of our `epoll_data`is written to the padding between our `u32`and our `u64`\(which is what an `usize`is on 64 bit systems\).
 
-Fortunately FFI in Rust is really pleasant to work with, and we only need to make one small change to fix this:
+Fortunately FFI in Rust is really pleasant to work with and we only need to make one small change to fix this:
 
 ```rust
 #[derive(Debug, Clone, Copy)]

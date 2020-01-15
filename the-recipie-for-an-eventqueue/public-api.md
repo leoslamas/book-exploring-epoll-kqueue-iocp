@@ -4,7 +4,7 @@ So let's get starting, first out is our public API in `lib.rs`. Let's implement 
 
 ### Event and Token
 
-We start off easy. `Events`is just an ordinary `Vec`of events which are defined in our platform specific modules. `Token`is just a type alias for `usize`. I only include it since it's very common to use `Token`instead of a `usize`to identify an event. The reason for this is that contrary to what we do, another implementation could pass in a pointer to some data or anything else instead of a simple number to identify a specific event.
+We start off easy. `Events`is just an ordinary `Vec`of events which are defined in our platform specific modules. `Token`is just a type alias for `usize`. I only include it since it's very common to use `Token`instead of an `usize`to identify an event. The reason for this is that contrary to what we do, another implementation could pass inn a pointer to som data or anything else than a simple number to identify a specific event.
 
 ```rust
 pub type Events = Vec<Event>;
@@ -23,7 +23,7 @@ pub struct Poll {
 }
 ```
 
-So `Poll`is pretty simple. It contains a `Registry`which we'll define below, and a flag `is_poll_dead`which indicates if this `Poll`instance has received a close signal or not. This needs to be a `AtomicBool`wrapped in a `Arc`since we'll pass on a reference to this flag when we create a `Registrator`. 
+So `Poll`is pretty simple. It contains a `Registry`which we'll define below, and a flag `is_poll_dead`which indicates if this `Poll`instance has recieved a close signal or not. This needs to be an `AtomicBool`wrapped in an `Arc`since we'll pass on a reference to this flag when we create a `Registrator`. 
 
 {% hint style="info" %}
 `Arc`is an atomic reference counted smart pointer in Rust. It's similar to the smart pointer `Rc`but it's thread safe. 
@@ -69,7 +69,7 @@ impl Poll {
 
 We have three important methods here. 
 
-First `new`instantiates a new instance of Poll. If you're not very familiar with Rust yet, I'll explain what we do here since it can be hard to understand:
+First `new`instanciates a new instance of Poll. If you're not very familiar with Rust yet, I'll explain what we do here since it can be hard to understand:
 
 `Selector::new()`returns a `io::Result<Selector>`. The `Result`enum in Rust has a method called `map`. This method is only called if the result is `Result::Ok( ... )`, and passes the value `...`into the closure we provide. So if the call to `Selector::new()`does not return an `Err`we create a `Poll`instance in the closure:
 
@@ -82,7 +82,7 @@ First `new`instantiates a new instance of Poll. If you're not very familiar with
 
 Next method is the `registrator`method. This method returns a `Registrator`. This is the only way to create a `Registrator`since a `Registrator`which is not tied to a `Poll`instance makes no sense.
 
-We create a `registrator` by calling the platform specific `registrator`method on the platform specific `Select`instance. By calling `clone`on our `Arc<AtomicBool>`we increase the reference count and receive a reference to the `is_poll_dead`flag in our `Poll`instance. 
+We create a registrator by calling the platform specific `registrator`method on the platform specific `Select`instance. By calling `clone`on our `Arc<AtomicBool>`we increase the reference count and recieve a reference to the `is_poll_dead`flag in our `Poll`instance. 
 
 The last method on the `Poll`instance is `poll`and let's walk through this code as well.
 
@@ -94,7 +94,7 @@ let timeout = timeout_ms.map(|n| if n < 0 { 0 } else { n });
 
 Next we create a loop which actually waits for events to be ready. If the `select`call returns `Ok(())`we break out of the loop. However, you might wonder why we call this in a loop at all?
 
-The answer is on the next line. If the error is of `kind` `io::ErrorKind::Interrupted`we actually do nothing and just call `select`again. On any other error type we exit the loop and return the error.
+The answer is on the next line. If the error is of `kind` `io::ErrorKind::Interrupted`we actually do nothing an just call `select`again. On any other error type we exit the loop and return the error.
 
 {% hint style="info" %}
 The reason for special casing `Interrupted`is whats called  [Spurious Wakeup](https://en.wikipedia.org/wiki/Spurious_wakeup), and it's expected by all platforms that we account for this condition to happen. The OS doesn't guarantee that it only wakes up the thread on an event, it could happen if certain conditions occur on the same time with the result that our thread is woken up and no event has occured.
@@ -113,7 +113,7 @@ loop {
 }
 ```
 
-If we get an `Ok()` we proceed to check if we've received a close signal while our thread was suspended. If we did we return an `Error`of kind `Interrupted`to the user of our library. We document this so the user knows to check for this error type and act accordingly.
+If we get an `Ok()` we proceed to check if we've recieved a close signal while our thread was suspended. If we did we return an `Error`of kind `Interrupted`to the user of our library. We document this so the user knows to check for this error type and act accordingly.
 
 {% hint style="info" %}
 Since `Interrupted`is special cased in the `select`call there is no way for `select`to return an `Interrupted`error kind. That means we know that the only way the `poll`method will return this kind of error is in the case of a closed event queue.
@@ -144,7 +144,7 @@ pub struct Registry {
 
 ### `Interests`
 
-This struct just provides a simple way for us to let a user express what kind of event they want to register interest in. This struct uses a somewhat uncommon technique of defining constants inside the struct itself.
+This struct is just provides a simple way for us to to let a user express what kind of event they want to register interest in. This struct uses a somewhat uncommon technique of defining constants inside the struct itself.
 
 The advantage of this is that we expose these constants namespaced by the `Interests`struct so it's called like `Interests::READABLE`by the user.
 

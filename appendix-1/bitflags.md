@@ -19,7 +19,7 @@ Let's say you have 8 different choices a user can can set. For our example let's
 
 We can set any combination of these flags, or none. A very space-efficient way of representing these choices is using an `u8`. There are 2^8 different combinations \(256 combinations possible using these 8 toppings\).
 
-**We could represent this using an `u8`in two ways:**
+**We could represent this using a `u8`in two ways:**
 
 1. Assigning each possible combination a unique value from 0-255.
 2. Using the bits in the `u8`as a flag to indicate if a topping is choosing or not
@@ -28,7 +28,7 @@ While both are possible, a chef might want to first know what kind of cheese the
 
 In the second alternative the chef only needs to check if the first bit is 1 or 0. 
 
-The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choices. That's why using bitflags are popular and widely used. Bitflags are commonly used as a convenient way of providing users of a library a set of options they can set. When using options that can either be enabled or disabled we refer to this as setting a .
+The problem assigning a unique number for each possible combination is exponentially cumbersome when increasing the number of choices. That's why using bitflags are popular and widely usedBitflags are commonly used as a convenient way of providing users of a library a set of options they can set. When using options that can either be enabled or disabled we refer to this as setting a .
 
 **Here are some examples using bitflags:**
 

@@ -1,10 +1,10 @@
 # The Reactor-Executor Pattern
 
-This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) and it's especially relevant in Rust due to how well this pattern aligns with the `Futures`API. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in English below.
+This pattern is most often referred to as just [Reactor Pattern](https://tianpan.co/blog/2015/01/13/understanding-reactor-pattern-for-highly-scalable-i-o-bound-web-server/) and it's especially relevant in Rust due to how well this pattern aligns with the `Futures`api. This is a commonly used technique for "demultiplexing" asynchronous events in the order they arrive. Don't worry I'll explain this in English below.
 
-In Rust, we often refer to both a `Reactor`and a `Executor`when we talk about its asynchronous model. The reason for this is that `Futures`in Rust fits nicely in between as the glue that allows these two pieces to work together.
+In Rust we often refer to both a `Reactor`and an `Executor`when we talk about its asynchronous model. The reason for this is that `Futures`in Rust fits nicely in between as the glue that allows these two pieces to work together.
 
-One huge advantage of this is that this allows us to pick the `Reactor`and the `Executor`which best suits our problem at hand. In practice, you'll most often use a runtime which provides both for you.
+One huge advantage of this is that this allows us to pick the `Reactor`and the `Executor`which best suits our problem at hand. In pratice, you'll most often use a runtime which provides both for you.
 
 Before we talk more about how this relates to `Futures`lets first take a look at what we need to implement. To create a minimal example of the Reactor Pattern we need:
 
@@ -20,9 +20,9 @@ Before we talk more about how this relates to `Futures`lets first take a look at
 
 ### The Reactor
 
-A cross platform Epoll/Kqueue/IOCP library, like the one we're implementing in this book, can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready, and we actually need to receive the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
+The cross platform Epoll/Kqueue/IOCP library which we implement in this book can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready and we actually need to receive the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
 
-A basic `Reactor`can look like this:
+A very simple `Reactor`can look like this:
 
 ```rust
 struct Reactor {
@@ -108,7 +108,7 @@ impl Excutor {
 }
 ```
 
-It's not very sophisticated but will do the work for us. As you see a handler, which will actually represent a suspended task in our example, doesn't need to be anything more fancy than a closure which we'll invoke when the time is right. The means of communication between our `Reactor`and `Executor`is just a regular `std::sync::mspc::Channel`and all we do in `block_on_all`is to wait for events which we can respond to.
+It's not very sophisticated but will do the work for us. As you see a handler, which will actually represent a suspended task in our example, doesn't need to be anyting more fancy than a closure which we'll invoke when the time is right. The means of communication between our `Reactor`and `Executor`is just a regular `std::sync::mspc::Channel`and all we do in `block_on_all`is to wait for events which we can respond to.
 
 There is of course many ways which we could choose to handle this, feel free to play around and try for yourself.
 
@@ -152,9 +152,9 @@ fn main() {
 }
 ```
 
-There are a few things to note here. First, the `TcpStream`is provided to us by our `Reactor`and is not the one in the standard library. Secondly you'll see that we have only implemented methods for `Read`and not for `Write`. If we had to write all our async code like this it wouldn't be very ergonomic. That's why we use runtimes which does a lot of this for us, like closing down our `Poll`loop, releasing resources and joining threads.
+There are a few things to note here. First of all the `TcpStream`is provided to us by our `Reactor`and is not the one in the standard library. Secondly you'll see that we have only implemented methods for `Read`and not for `Write`. If we had to write all our async code like this it wouldn't be very ergonomic. That's why we use runtimes which does a lot of this for us, like closing down our `Poll`loop, releasing resources and joining threads.
 
-**Let's go through the steps we take here:**
+**Lets go through the steps we take here:**
 
 1. We provide a means of communication between our `Reactor`and `Executor`
 2. We instantiate a `Reactor`and an `Executor`

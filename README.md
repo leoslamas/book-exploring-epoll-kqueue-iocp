@@ -6,15 +6,17 @@ description: Cross Platform Event Queues Explained With Rust
 
 This book aims to explain how `Epoll`, `Kqueue`and `IOCP`works, and we can use this for efficient, high performance I/O. The book is divided into three:
 
-**Part 1 - An express explanation: is probably what 99 % what you're after if you're just interested in a short introduction.**
+**Part 1 - An express explanation: is probably what 99 %  of you're after if you're just interested in a short introduction.**
 
-**The Appendix** contains some additional references and small articles explaining some concepts that I found interesting myself.
+**The Appendix** contains some additional references and small articles explaining some concepts that I found interesting and which is related to the kind of code we write here.
 
-**Part 2 is special.** 99 % of readers should not even go there, all they'll find is page up and down with code. Much of it pretty boring even.
+**Part 2 is special.** Most readers should not even go there, all they'll find is page up and down with code and explanations just to implement a very basic example of a cross-platform-eventloop. 
 
-The only reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example. However, it's the easiest way I could think of that got a working solution we could later use to explore how a cross platform event loop could be made. 
+The only reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example. 
 
-Later on in another book we might use this to explore how higher level concepts like`Reactors`, `Executors`and `Futures`in Rust work. Part 2 could also serve as an introduction to make it easier to read and understand the source code of libraries like [mio](https://github.com/tokio-rs/mio) or [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/).
+However, it's the easiest way I could think of that got a working solution we could later use to explore how a proper cross platform event loop could work since such code bases can be pretty daunting to dive into themselves.
+
+Later in another book we might use this exact code to explore how higher level concepts like`Reactors`, `Executors`and `Futures`in Rust work. Part 2 could also serve as an introduction to make it easier to read and understand the source code of libraries like [mio](https://github.com/tokio-rs/mio) or [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/).
 
  
 
@@ -34,15 +36,15 @@ This book should be interesting if you want to learn more about:
 
 * How FFI works in Rust and what the crates `libc` and `mio`provides for you
 * How to create a cross platform event loop using the same methods as `Node` and `Tokio`uses 
-* How the `Reactor`in Rusts async model often is implemented
+* How the `Reactor`in Rusts async model often driven
 * How to create a library in Rust that conditionally compiles code for the three major platforms
-* How to make syscalls on Linux, Macos and Windows
+* How to make syscalls on Linux, OSX and Windows
 
+{% hint style="warning" %}
 _I'll avoid any external dependencies, so we make sure we remove as much "magic" as possible to make sure we really understand this from the ground up._
 
-### Disclaimer
-
-This will be an introduction to this subject. The example we write will have a strong focus on create working but minimal examples. There are many edge cases we don't cover, but I try to mention the most important ones in the appendix chapter:[ It's not that easy.](the-recipie-for-an-eventqueue/its-not-that-easy.md) Please read that chapter too.
+_Throughout this book I'll use Rusts own types when interfacing with the `ffi`interface on all platforms. I do this to make the code as straight forward as possible, but it's not recommended if you care about maximising compatability._
+{% endhint %}
 
 ### Prerequisites
 

@@ -16,7 +16,7 @@ Kqueue is a system call which provides us with a generic method which lets us ge
 
 ### `kevent`
 
-In contrast to IOCP \(and Epoll\), we use the same syscall to register and wait for events. The `kqueue`syscall will know what to do based on the arguments we provide. As we'll see, this results in a pretty elegant API but it can be a bit hard to wrap your head around in the start. It's documented on the same manpage as `kqueue`.
+In contrast to IOCP \(and Epoll\), we use the same syscall to registe and wait for events. The `kqueue`syscall will know what to do based on the arguments we provide. As we'll see, this results in a pretty elegant API but it can be a bit hard to wrap your head around in the start. It's documented on the same manpage as `kqueue`.
 
 ### `close`
 
@@ -54,7 +54,7 @@ We'll explain the filters and flags we need to use when we show how to use `kque
 
 ### `Timespec`
 
- Timeouts on `BSD` is passed as a  `Timespec`struct. It's important for us since we want to be able to set a timeout for how long we want to wait for an event before the thread calling `poll`is woken up.
+ Timeouts on `BSD` is passed as a  `Timespec`struct. It's important for us since we want to be able to set a timeout fow how long we want to wait for an event before the thread calling `poll`is woken up.
 
 ```rust
 #[derive(Debug)]
@@ -67,7 +67,7 @@ pub(super) struct Timespec {
 }
 ```
 
-## Useful flags and constants
+## Usefull flags and constants
 
 ```rust
 pub const EVFILT_READ: i16 = -1;

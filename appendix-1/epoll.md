@@ -8,7 +8,7 @@ description: Epoll is the Linux way of providing a scalable event queue.
 
 ### `epoll_create`
 
-Similarly to `CreateCompletionPort`and `kqueue`, the `epoll_create`syscall creates an epoll instance and returns a file handle to us.
+Similarely to `CreateCompletionPort`and `kqueue`, the `epoll_create`syscall creates an epoll instance and returns a file handle to us.
 
 {% embed url="http://man7.org/linux/man-pages/man2/epoll\_create1.2.html" %}
 
@@ -20,7 +20,7 @@ The `epoll_ctl`syscall is used to add, modify or remove events from the event qu
 
 ### `epoll_wait`
 
-The `epoll_wait`syscall suspends \(deschedules\) the thread it's called from, thereby blocking any further progress on that thread until either an event has occurred or a provided `timeout`has expired.
+The `epoll_wait`syscall suspends \(deschedules\) the thread it's called from, thereby blocking any further progress on that thread until either an event has occured or a provided `timeout`has expired.
 
 {% embed url="http://man7.org/linux/man-pages/man2/epoll\_wait.2.html" %}
 
@@ -79,5 +79,5 @@ pub const EPOLLIN: i32 = 0x1;
 pub const EPOLLONESHOT: i32 = 0x40000000;
 ```
 
-The flags are used by `OR`-ing different flags together. This is a pretty common way of describing a set of options in C. Read more about bitflags in the paragraph about them in the Appendix.
+The flags are used by `or`ing different flags together. This is a pretty common way of describing a set of options in C. Read more about bitflags in the paragraph about them in the Appendix.
 

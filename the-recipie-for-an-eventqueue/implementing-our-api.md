@@ -1,6 +1,6 @@
 # A brief overview
 
-The first thing we do is to describe and implement the platform-independent functionality and the public surface of our library. 
+The first thing we do is to describe and implement the platform-indipendant functionality and the public surface of our library. 
 
 Navigate to `lib.rs`and open the file.
 
@@ -51,7 +51,7 @@ As you might recognize from our API design we have the definitions of `Events`, 
 
 As you might notice there is no `Registrator`or `TcpStream`yet which is part of our public API, the reason for that is that we need to rely on some platform specifics for those. In addition, we need some platform specifics to actually implement our API.
 
-It's not that much really, let's make two more changes to accommodate for the platform specific code:
+It's not that much really, let's make two more changes to accomondate for the platform specific code:
 
 ### Platform specific modules
 
@@ -82,7 +82,7 @@ mod macos;
 mod windows;
 ```
 
-The `[cfg(target_os = "...")]`is a conditional compilation flag. The[ cfg attribute ](https://doc.rust-lang.org/reference/conditional-compilation.html)lets us define certain conditions that needs to be true for this part of the code to compile. In this case we compile the module if the `target_os`matches.
+The `[cfg(target_os = "...")]`is a conditional compilation flag. The[ cfg attrbute ](https://doc.rust-lang.org/reference/conditional-compilation.html)lets us define certain condtions that needs to be true for this part of the code to compile. In this case we compile the module if the `target_os`matches.
 
 We'll also need some platform specific functionality to actually implement our event queue:
 
@@ -95,7 +95,7 @@ pub use macos::{Event, Registrator, Selector, TcpStream};
 pub use windows::{Event, Registrator, Selector, TcpStream};
 ```
 
-As you see here we pull inn the same methods from each of the modules. They need to have the same API and the same signatures to work.
+As you see here we pull inn exactly the same methods from each of the modules. They need to have the same API and the same signatures to work.
 
 {% hint style="info" %}
 An alternative to manually making sure that we have the same API on each arcitecture is to define `Traits`for Event, Registrator, TcpStream and make sure our platform specific structs implement these. We keep it simple though. Actually, the way we do it here is a pretty common pattern when dealing with platform specific code in Rust. 
@@ -105,11 +105,11 @@ You might wonder what these methods do, and we'll go through that in detail in t
 
 #### `Event`
 
- Event is the representation of an event. It implements only one public method `id() -> Token`. This method lets us identify each event.
+ Event is the representation of an event. It implements only one public method `id() -> Token`. This mehod lets us identify each event.
 
 #### `Registrator`
 
-The `Registrator`lets us register interest in new events to our event queue. It publicly exposes a method called `register()`and a method `close_loop()`. The last one lets us close down the loop created on our `Poll`method.
+The `Registrator`let's us register interest in new events to out evet queue. It publicly exposes a method called `register()`and a method `close_loop()`. The last one lets us close down the loop created on our `Poll`method.
 
 #### `Selector`
 
@@ -117,7 +117,7 @@ Selector is really the heart of the whole event queue. This is what drives our `
 
 #### `TcpStream`
 
-Is actually supposed to mimick`std::net::TcpStream` but we'll only implement the `connect`method. However, we will also provide our own implementation of the `Read`, `Write`and `AsRawFd/AsRawSocket`traits.
+Is actually supposed to mimick `std::net::TcpStream`but we'll only implement the `connect`method. However, we will also provide our own implementation of the `Read`, `Write`and `AsRawFd/AsRawSocket`traits.
 
 
 

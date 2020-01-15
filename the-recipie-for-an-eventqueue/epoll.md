@@ -1,7 +1,5 @@
 # Epoll
 
-Since both `Epoll` and `Kqueue` is re implementing the same basic logic as we did for `IOCP` I'll let the code speak for itself. I have commented the code pretty extensively to clarify some interesting differences, though.
-
 ```rust
 use crate::{Events, Interests, Token};
 use std::io::{self, IoSliceMut, Read, Write};
