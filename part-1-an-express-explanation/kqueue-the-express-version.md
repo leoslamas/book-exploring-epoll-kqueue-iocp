@@ -71,7 +71,7 @@ Here we see the definition of the `Kevent`structure. If we look at the manpage f
 
 ![Click to enlarge](../.gitbook/assets/bilde%20%2812%29.png)
 
-You can find more information on the [macos manpage for `kevent`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/kevent.2.html). One thing to note is that the `udata`field can be used to store any user defined data. The OS leaves this untouched so it doesn't need to be a valid pointer. In our example code we use a regular `usize`to identify each event.
+You can find more information on the [macos manpage for `kevent`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/kevent.2.html). One thing to note is that the `udata`field can be used to store any user-defined data. The OS leaves this untouched so it doesn't need to be a valid pointer. In our example code we use a regular `usize`to identify each event.
 
 Let's put this all together and see how these syscalls are used:
 

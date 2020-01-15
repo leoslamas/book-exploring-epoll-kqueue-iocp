@@ -13,14 +13,14 @@
   * [IOCP](the-recipie-for-an-eventqueue/iocp.md)
   * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
   * [Kqueue](the-recipie-for-an-eventqueue/kqueue.md)
+  * [It's not that easy](the-recipie-for-an-eventqueue/its-not-that-easy.md)
 
 ## Appendix <a id="appendix-1"></a>
 
-* [Bitflags](appendix-1/bitflags.md)
 * [The Reactor-Executor Pattern](appendix-1/reactor-executor-pattern.md)
+* [Bitflags](appendix-1/bitflags.md)
+* [Atomics in Rust](appendix-1/atomics-in-rust.md)
 * [IOCP Reference](appendix-1/iocp.md)
 * [Epoll Reference](appendix-1/epoll.md)
 * [Kqueue Reference](appendix-1/kqueue.md)
-* [It's not that easy](appendix-1/its-not-that-easy.md)
-* [Atomics in Rust](appendix-1/atomics-in-rust.md)
 

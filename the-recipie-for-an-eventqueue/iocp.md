@@ -8,7 +8,7 @@ It's also by far going to be the implementation requiring most lines of code and
 
 Let's move in to the `windows.rs`file in our project.
 
-To implement an IOCP backed event queue you need to interact with the operating system through a set of syscalls. Let's create a submodule in the `windows.rs`file to contain these calls.
+To implement an IOCP backed event queue you need to interact with the operating system through a set of syscalls. Let's create a sub module in the `windows.rs`file to contain these calls.
 
 ## FFI module
 
@@ -18,7 +18,7 @@ mod ffi {
 }
 ```
 
-Inside this submodule, let's define the `extern` functions we're going to call to make these syscalls:
+Inside this sub module, let's define the `extern` functions we're going to call to make these syscalls:
 
 ```rust
 #[link(name = "Kernel32")]
@@ -108,7 +108,7 @@ pub fn create_io_completion_port(
 
 ### WSARecv
 
-This method will registers an interest in a `data recieved`event. Together with the [WSASend](https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend) method this let's us wait for completed `Read`and `Write`operations. This will be the method we call to indicate to the operating system that we're interested to get a notification when the `Recieve`event has finished on our `Socket`. We call this from our `Registrator`.
+This method will register an interest in a `data recieved`event. Together with the [WSASend](https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend) method this lets us wait for completed `Read`and `Write`operations. This will be the method we call to indicate to the operating system that we're interested to get a notification when the `Recieve`event has finished on our `Socket`. We call this from our `Registrator`.
 
 Windows, calls an operation we can await in an event queue an `Overlapped Operation`. Knowing this is handy when it comes to understanding the names of data structures and functions on Windows.
 
@@ -167,8 +167,8 @@ pub fn wsa_recv(
 }
 ```
 
-{% hint style="info" %}
-The safe wrapper deserves some commenting. Do you see the cast `operation_ptr as *mut WSAOVERLAPPED`? 
+{% hint style="success" %}
+**The safe wrapper deserves some commenting. Do you see the cast `operation_ptr as *mut WSAOVERLAPPED`?** 
 
 This is explained below, but it's a way for us to actually identify what event occurred. The way we do this is by wrapping `WSAOVERLAPPED`in an `Operation`struct. 
 
@@ -179,7 +179,7 @@ This technique is inspired by the [BOOST ASIO implementation of IOCP](https://ww
 
 ### PostQueuedCompletionStatus
 
-This let's us post an event to our event queue. We only need this to register an event which lets us wake up the thread waiting for events to close it down.
+This lets us post an event to our event queue. We only need this to register an event which lets us wake up the thread waiting for events to close it down.
 
 **Safe wrapper:**
 
@@ -210,7 +210,7 @@ pub fn post_queued_completion_status(
 
 ### GetQueuedCompletionStatusEx
 
-Ok, so this is the actually blocking call which waits for new events. There are two related functions called `GetQueuedCompletionStatusEx`and `GetQueuedCompletionStatus`. The difference between them is that `GetQueuedCompletionStatus`recieves one and one event, while the `...Ex`version can recieve multiple events simultaniously.
+Ok, so this is the actually blocking call which waits for new events. There are two related functions called `GetQueuedCompletionStatusEx`and `GetQueuedCompletionStatus`. The difference between them is that `GetQueuedCompletionStatus`receives one and one event, while the `...Ex`version can receive multiple events simultaneously.
 
 One thing to note is that we need to pass in a pre-allocated `OVERLAPPED_ENTRY`structures. This array will be filled with entries corresponding to an event.
 
@@ -287,7 +287,7 @@ pub fn close_handle(handle: isize) -> io::Result<()> {
 
 ### WSAGetLastError
 
-This function retrieves the last error we got. Normally it's enough to check if there was an error and use Rusts standard librarys `std::io::Error::last_os_error()`to retrieve the error. However, in our `WSARecv`function we need to retrieve information about the error and get the correct error code.
+This function retrieves the last error we got. Normally it's enough to check if there was an error and use `std::io::Error::last_os_error()`from Rust's standard library to retrieve the error. However, in our `WSARecv`function we need to retrieve information about the error and get the correct error code.
 
 We'll not create a safe wrapper around this since we only call this function in our other safe wrappers and never outside the `ffi`module.
 
@@ -452,7 +452,7 @@ In our code we do this as a part of `OVERLAPPED_ENTRY` which has a pointer to th
 We used a `LinkedList`to store these operations. The reason for preferring this over a `Vec`is that we could end up reallocating the `Vec`if we register many events on this resource thereby invalidating the address to the `Operation`struct we handed over to Windows. A linked list will not reallocate and is a suitable collection to use for this scenario.
 {% endhint %}
 
-To be able to use this socket as a normal `std::net::TcpStream`we implement the `Read`, `Write`and `AsRawSocket`traits. The interesting part is where we "hjack" the `read`method and read from the buffer we sent to `IOCP`instead.
+To be able to use this socket as a normal `std::net::TcpStream`we implement the `Read`, `Write`and `AsRawSocket`traits. The interesting part is where we "hijack" the `read`method and read from the buffer we sent to `IOCP`instead.
 
 If we had implemented `WSASend`we'd have to do the same for the `Write`methods.
 
@@ -549,18 +549,18 @@ impl AsRawSocket for TcpStream {
 
 ### The Registrator
 
-The registrator needs to be "linked" to our completion port, and should be able to check if the event loop is alive or not so we don't use the `Registrator`after we sent a `close_signal`to our event loop.
+The `registrator` needs to be "linked" to our completion port, and should be able to check if the event loop is alive or not so we don't use the `Registrator`after we sent a `close_signal`to our event loop.
 
 We use an `Arc<AtomicBool>`to check if the `Poll`instance is alive or not. The "link" to the completion port is simply the completion port handle.
 
-Registrator has two public methods: `register`and `close_loop`. 
+`Registrator` has two public methods: `register`and `close_loop`. 
 
-Register is interesting. it takes a `TcpStream`\(not the `std::net`one though\), a token and a bitflag indicating what interests we're interested in.
+`register` is interesting. It takes a `TcpStream`\(not the `std::net`one though\), a token and a bitflag indicating what interests we're interested in.
 
 Now, the first thing we do is to check if the `Poll`instance is dead.
 
 {% hint style="danger" %}
-Warning! Remember that the `Registrator`is meant to just be used on **one** different thread from the one that our `Poll`instance is running on. Read the [relevant paragraph in the Appendix chapter "It's not that easy"](../appendix-1/its-not-that-easy.md#thread-safety-and-race-conditions) for more information about this and potential ways to solve this limitation.
+Warning! Remember that the `Registrator`is meant to just be used on **one** different thread from the one that our `Poll`instance is running on. Read the [relevant paragraph in the Appendix chapter "It's not that easy"](its-not-that-easy.md#thread-safety-and-race-conditions) for more information about this and potential ways to solve this limitation.
 {% endhint %}
 
 The next thing we do is to associate the "resource", in this case a `socket`with our `IOCP`instance. 
@@ -638,9 +638,11 @@ Now there are ways to deal with this so we don't require an API which needs `&mu
 If we implement this as part of a Runtime which we control there are ways for/ us to guarantee that the buffer is not touched or moved, so we could mutate it safely, but this is not a Runtime so we can't know that.
 {% endhint %}
 
+One interesting thing to note here is that in our `close_loop` function we need to wake the thread which is now suspended waiting for events. On Windows we do this by posting en empty completion packet using `PostQueuedCompletionStatus`, which will wake up our thread immediately. Since we get no events in return, we just continue until we check the flag which indicates that our instance is closed and exits. On the other platforms we use different methods to accomplish the same.
+
 ### The Selector
 
-The selector is whats backing the `Poll`instance and is where the blocking call to wait for events occur.
+The selector is what's backing the `Poll`instance and is where the blocking call to wait for events occur.
 
 As you see, `Selector`is really only a wrapper around the CompletionPort handle with a few important methods.
 
@@ -733,11 +735,11 @@ impl Drop for Selector {
 }
 ```
 
-Conclusion
+### Conclusion
 
 If you got all the way here to the conclusion by reading all this code, I'm impressed. Good job! 
 
-`IOCP`supports a [variety of resources](https://docs.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports#supported-io-functions) which can be used in a similar way to what we show here. Just remember to read the [It's not that easy](../appendix-1/its-not-that-easy.md) chapter to get some overview of the shortcuts and scenarios we haven't covered here.
+`IOCP`supports a [variety of resources](https://docs.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports#supported-io-functions) which can be used in a similar way to what we show here. Just remember to read the [It's not that easy](its-not-that-easy.md) chapter to get some overview of the shortcuts and scenarios we haven't covered here.
 
 If you haven't cloned the repo yet or want to have a look at the complete code presented in this chapter check out the [repository.](https://github.com/cfsamson/examples-minimio)
 
