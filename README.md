@@ -6,19 +6,17 @@ description: Cross Platform Event Queues Explained With Rust
 
 This book aims to explain how `Epoll`, `Kqueue`and `IOCP`works, and we can use this for efficient, high performance I/O. The book is divided into three:
 
-**Part 1 - An express explanation: is probably what 99 %  of you're after if you're just interested in a short introduction.**
+**Part 1 - An express explanation:** is probably what you want to read if you're interested in a short introduction.
 
 **The Appendix** contains some additional references and small articles explaining some concepts that I found interesting and which is related to the kind of code we write here.
 
-**Part 2 is special.** Most readers should not even go there, all they'll find is page up and down with code and explanations just to implement a very basic example of a cross-platform-eventloop. 
+**Part 2 is special.** 99% of readers should not even go there. All you'll find is page up and down with code and explanations just to implement the simplest of example I could think of to create a cross-platform-eventloop that actually works.
 
-The only reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example. 
+The only reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example meant to explore how a proper cross platform event loop works since such code bases can be pretty daunting to dive into themselves.
 
-However, it's the easiest way I could think of that got a working solution we could later use to explore how a proper cross platform event loop could work since such code bases can be pretty daunting to dive into themselves.
+Later in another book we might use this exact code to explore how higher level concepts like`Reactors`, `Executors`and `Futures`in Rust work. 
 
-Later in another book we might use this exact code to explore how higher level concepts like`Reactors`, `Executors`and `Futures`in Rust work. Part 2 could also serve as an introduction to make it easier to read and understand the source code of libraries like [mio](https://github.com/tokio-rs/mio) or [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/).
-
- 
+**Part 2** could also serve as an introduction to make it easier to read and understand the source code of libraries like [mio](https://github.com/tokio-rs/mio) or [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/). Even though these libraries have extensive documentation already it can be difficult to know where to start.
 
 {% hint style="info" %}
 **This book is developed in the open and there are some resources I'll point you at right away:**
