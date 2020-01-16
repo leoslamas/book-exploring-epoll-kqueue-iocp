@@ -2,7 +2,7 @@
 
 The first thing we need to do is to create a library project where we'll organize our code. We'll name our project `minimio.`
 
-Now, whether you've read my previous book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway.Run the following commands to create our project:
+Now, whether you've read my previous book or not shouldn't matter much, since we'll create an integration test that defines what we want to accomplish anyway. Run the following commands to create our project:
 
 ```text
 mkdir minimio
@@ -19,12 +19,12 @@ For now we only want to cover one use case and that is to provide a event queue 
 I've looked into how [mio ](https://github.com/tokio-rs/mio)API as an inspiration but for convenience I've made some compromises to simplify our code to fit an example.
 
 {% hint style="info" %}
-Reacently, `mio` changed from using IOCP as the backing API on Windows and started using WePoll instead simplifying their implementation greatly. I'll cover WePoll shortly in the end of this book, but for now, just know that I've used [mio v0.6.x](https://github.com/tokio-rs/mio/tree/v0.6.x) version as the inspiration for the code we use in this book for this exact reason so if you go to dive into the source code, make sure to switch to the `v0.6.x`branch.
+Reacently, `mio` changed from using IOCP as the backing API on Windows and started using WePoll instead simplifying their implementation greatly. For now, just know that I've used [mio v0.6.x](https://github.com/tokio-rs/mio/tree/v0.6.x) version as the inspiration for the code we use in this book for this exact reason so if you go to dive into the source code, make sure to switch to the `v0.6.x`branch.
 {% endhint %}
 
 ### Creating an integration test
 
-In Rust, it's common to have unit tests in the same file as code. Integration tests usually goes in a sperate `tests`folder, so let's make one. Our folder structure should look like this once done:
+In Rust, it's common to have unit tests in the same file as code. Integration tests usually goes in a separate `tests`folder, so let's make one. Our folder structure should look like this once done:
 
 ```text
 minimio
@@ -37,7 +37,7 @@ minimio
    |      +--> api.rs
 ```
 
-Now open `api.rs`and let's start desiging how we want our API to work.
+Now open `api.rs`and let's start designing how we want our API to work.
 
 ### **Our Requirements**
 
@@ -45,11 +45,11 @@ Now open `api.rs`and let's start desiging how we want our API to work.
 2. We want the same API across operating systems
 3. We want to be able to register interest from a different thread than we run the main loop on
 
-_Ok, so before we dive into the code, let's consider what we can immideately derive from these requirements._
+_Ok, so before we dive into the code, let's consider what we can immediately derive from these requirements._
 
 ### 1. Blocking the current thread
 
-We need an interface we can use which provides a way for us to block the thread while waiting for events to be ready. We also need something that identifies an event so we know which one finished in what order. We need to be able to send a signal to stop waiting in and exit from the blocking call or else our program would never exit \(if the event queue is run on our main thread\) or end in a "bad" way if we run it in a child thread.
+We need an interface we can use which provides a way for us to block the thread while waiting for events to be ready. We also need something that identifies an event, so we know which one finished in what order. We need to be able to send a signal to stop waiting and exit the blocking call or else our program would never exit \(if the event queue is run on our main thread or end in a "bad" way if we run it in a child thread\).
 
 {% hint style="info" %}
 * Inpsired by `mio` we call our main event queue instance `Poll`, and the blocking method `poll()`
@@ -61,7 +61,7 @@ We need an interface we can use which provides a way for us to block the thread 
 
 This is a difficult one. And it's very difficult to decide on in advance before actually digging into the details of both Epoll, Kqueue and IOCP. 
 
-We know that IOCP requires us to provide a buffer which it will fill with data but Epoll and Kqueue let's us know when data is ready to read. At least we can derive from these facts that we need to hook into whatever method the user calls for retrieving data. It seems impossible for us to provide any abstration lower than that.
+We know that IOCP requires us to provide a buffer which it will fill with data but Epoll and Kqueue let's us know when data is ready to read. At least we can derive from these facts that we need to hook into whatever method the user calls for retrieving data. It seems impossible for us to provide any abstraction lower than that.
 
 Once we realize that we also realize that using `std::net::TcpStream`is out of the question, but we can implement our own `TcpStream`where we "hijack" the `Read`methods \(and `Write`methods if we implemented those as well\). This way we can use `std::net::TcpStream`under the hood but implement our own `Read`implementation.
 
@@ -72,19 +72,19 @@ Once we realize that we also realize that using `std::net::TcpStream`is out of t
 
 ### 3. Register interest from a different thread
 
-So we want the user to be able to register interest from one thread and block while waiting for events on another thread. That means we need some way of having a basic synchonization to know that our `Poll`instance is actually waiting for events and that we have created an event queue.
+So we want the user to be able to register interest from one thread and block while waiting for events on another thread. That means we need some way of having a basic synchronization to know that our `Poll`instance is actually waiting for events and that we have created an event queue.
 
 It's apparent that this structure will be closely tied to our event queue. There are many ways to solve this but let's just start with a name and an idea of how it should work.
 
 {% hint style="info" %}
-* We need a `Registrator`which knows if our event queue is alive and can be sent to another thread.
+* We need a `Registrator`which knows if our event queue is alive and we must be able to send the `Registrator` instance to another thread.
 {% endhint %}
 
 ### The integration test
 
-So we have a rough idea about our API now so let's start scetching out a test. We'll divide this into some smaller unit tests later and use this integration test to know when we've reached our goal for now.
+So, we have a rough idea about our API now so let's start sketching out a test. We'll divide this into some smaller unit tests later and use this integration test to know when we've reached our goal for now.
 
-Lets start with the imports we know we need from our library:
+Let's start with the imports we know we need from our library:
 
 {% hint style="info" %}
 An integration test in Rust uses our library as it would be used by any other user, therefore we can only access the public API of our library.
@@ -147,9 +147,9 @@ let mut poll = Poll::new().unwrap();
 let registrator = poll.registrator();
 ```
 
-Here we create our event queue by creating a new `Poll`and we get a `Registrator`by calling `poll.registrator()`which we'll use to register interest in events. The registrator is designed to be held in a seperate thread from the `Poll`instance.
+Here we create our event queue by creating a new `Poll`and we get a `Registrator`by calling `poll.registrator()`which we'll use to register interest in events. The `Registrator` is designed to be held in a separate thread from the `Poll`instance.
 
-We want to block and wait for events in a seperate thread so we spawn a new thread and write the following code to be executed on that thread.
+We want to block and wait for events in a separate thread, so we spawn a new thread and write the following code to be executed on that thread.
 
 **First we create a collection of `Events`:**
 
@@ -157,7 +157,7 @@ We want to block and wait for events in a seperate thread so we spawn a new thre
 let mut events = Events::with_capacity(1024);
 ```
 
-The reason for creating the collection here is mainly because it aligns well with how all three operating sysmtes returns events and it's again heavily inspired by how `mio`does this as well. 
+The reason for creating the collection here is mainly because it aligns well with how all three operating systems returns events and it's again heavily inspired by how `mio`does this as well. 
 
 Next up is the actual blocking call where we wait for events.
 
@@ -178,10 +178,10 @@ Here we pass in a reference to our event collection and a timeout of 200 ms. The
 
 If we don't do this we have no way of shutting the eventloop down \(my first implementation blatantly disregarded this which is a problem if you want to shut your threads down properly\).
 
-I used `io::ErrorKind::Interrupted` to indicate that we have recived a signal to close down the loop instead of implementing a type to represent this state. This is to keep our code as short as possible and `Interrupted`is after all somewhat descriptive.
+I used `io::ErrorKind::Interrupted` to indicate that we have received a signal to close down the loop instead of implementing a type to represent this state. This is to keep our code as short as possible and `Interrupted`is after all somewhat descriptive.
 {% endhint %}
 
-The last part of our `Poll`thread is to actually go through the events we got \(if any\) and comminucate to the `Executor`that a certain task is ready to make progress.
+The last part of our `Poll`thread is to actually go through the events we got \(if any\) and communicate to the `Executor`that a certain task is ready to make progress.
 
 ```rust
 for event in &events {
@@ -227,11 +227,11 @@ registrator.register(&mut stream, TEST_TOKEN, Interests::READABLE).expect("...")
 registrator.close_loop().expect("close loop err.");
 ```
 
-First we use our own implementation of a `TcpStream` to open a socket. Next we get a `Registrator`by calling `Reactor::registrator()`. This registrator should be able to live in a different thread from our `Poll`instance. 
+First we use our own implementation of a `TcpStream` to open a socket. Next we get a `Registrator`by calling `Reactor::registrator()`. This `registrator` should be able to live in a different thread from our `Poll`instance. 
 
 To register interest in an event on the `TcpStream`we call `Registrator::register()`and pass in an exclusive reference to our `TcpStream`, a token which identifies this exact event and a flag indicating what kind of event we're interested in on that socket.
 
-Lastly we close our loop. Our example is a bit contrived in the way that we actually call our `Registrator`inside our first task and close the loop immidiately. However, for our test this an easy way to test what we want to accomplish.
+Lastly we close our loop. Our example is a bit contrived in the way that we actually call our `Registrator`inside our first task and close the loop immediately. However, for our test this an easy way to test what we want to accomplish.
 
 {% hint style="info" %}
 #### **Some tips if you're implementing your own event queue**
@@ -247,7 +247,7 @@ My recommendation is to actually start the other way around from what I did, fig
 
 ### The full code
 
-The code in this test is explained in the Appendix: The Reactor-Executor Pattern. The test has some minor changes in that we take care to join all threads before we exit and we remove all print statements. In addition we actually seperate the `Reactor`and the `Registrator`and actually send them to different threads in the test so we take care to cover all our requirements.
+The code in this test is explained in the Appendix: The Reactor-Executor Pattern. The test has some minor changes in that we take care to join all threads before we exit, and we remove all print statements. In addition, we actually separate the `Reactor`and the `Registrator`and actually send them to different threads in the test, so we take care to cover all our requirements.
 
 ```rust
 use minimio::{Events, Interests, Poll, Registrator, TcpStream};
