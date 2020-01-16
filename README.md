@@ -10,9 +10,9 @@ This book aims to explain how `Epoll`, `Kqueue`and `IOCP`works, and we can use t
 
 **The Appendix** contains some additional references and small articles explaining some concepts that I found interesting and which is related to the kind of code we write here.
 
-**Part 2 is special.** 99% of readers should not even go there. All you'll find is page up and down with code and explanations just to implement the simplest of example I could think of to create a cross-platform-eventloop that actually works.
+**Part 2 is special.** 99% of readers should not even go there. You'll find page up and down with code and explanations just to implement the simplest example of a cross-platform-eventloop that actually works. Turns out that there is no "express" way of doing this.
 
-The only reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example meant to explore how a proper cross platform event loop works since such code bases can be pretty daunting to dive into themselves.
+The reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example meant to explore how a proper cross platform event loop works since such code bases can be pretty daunting to dive into themselves.
 
 Later in another book we might use this exact code to explore how higher level concepts like`Reactors`, `Executors`and `Futures`in Rust work. 
 
