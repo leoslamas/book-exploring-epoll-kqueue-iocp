@@ -34,7 +34,7 @@ This book should be interesting if you want to learn more about:
 
 * How FFI works in Rust and what the crates `libc` and `mio`provides for you
 * How to create a cross platform event loop using the same methods as `Node` and `Tokio`uses 
-* How the `Reactor`in Rusts async model often driven
+* How the `Reactor`in the async library your're most likely using works
 * How to create a library in Rust that conditionally compiles code for the three major platforms
 * How to make syscalls on Linux, OSX and Windows
 
