@@ -2,7 +2,7 @@
 description: Cross Platform Event Queues Explained With Rust
 ---
 
-# Epoll, Kqueue and IOCP Explained in Rust
+# Epoll, Kqueue and IOCP Explained with Rust
 
 This book aims to explain how `Epoll`, `Kqueue`and `IOCP`works, and we can use this for efficient, high performance I/O. The book is divided into three:
 

@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Epoll, Kqueue and IOCP Explained in Rust](README.md)
+* [Epoll, Kqueue and IOCP Explained with Rust](README.md)
 * [Part 1: An express explanation](part-1-an-express-explanation/README.md)
   * [Epoll - the express version](part-1-an-express-explanation/the-basics.md)
   * [Kqueue - the express version](part-1-an-express-explanation/kqueue-the-express-version.md)
