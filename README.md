@@ -2,17 +2,17 @@
 description: Cross Platform Event Queues Explained With Rust
 ---
 
-# Epoll, Kqueue and IOCP Explained in Rust
+# Epoll, Kqueue and IOCP Explained with Rust
 
-This book aims to explain how `Epoll`, `Kqueue`and `IOCP`works, and we can use this for efficient, high performance I/O. The book is divided into three:
+This book aims to explain how `Epoll`, `Kqueue`and `IOCP`works, and how we can use this for efficient, high performance I/O. The book is divided into three parts:
 
 **Part 1 - An express explanation:** is probably what you want to read if you're interested in a short introduction.
 
 **The Appendix** contains some additional references and small articles explaining some concepts that I found interesting and which is related to the kind of code we write here.
 
-**Part 2 is special.** 99% of readers should not even go there. All you'll find is page up and down with code and explanations just to implement the simplest of example I could think of to create a cross-platform-eventloop that actually works.
+**Part 2 is special.** 99% of readers should not even go there. You'll find page up and down with code and explanations just to implement the simplest example of a cross-platform-eventloop that actually works. Turns out that there is no "express" way of doing this.
 
-The only reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example meant to explore how a proper cross platform event loop works since such code bases can be pretty daunting to dive into themselves.
+The reason I added Part 2 was all the work I've put into exploring things from the ground and up. It sets up a pretty bare bones cross platform event loop we can use to toy around with. It's just an example meant to explore how a proper cross platform event loop works since such code bases can be pretty daunting to dive into themselves.
 
 Later in another book we might use this exact code to explore how higher level concepts like`Reactors`, `Executors`and `Futures`in Rust work. 
 
@@ -34,7 +34,7 @@ This book should be interesting if you want to learn more about:
 
 * How FFI works in Rust and what the crates `libc` and `mio`provides for you
 * How to create a cross platform event loop using the same methods as `Node` and `Tokio`uses 
-* How the `Reactor`in Rusts async model often driven
+* How the `Reactor`in the async library your're most likely using works
 * How to create a library in Rust that conditionally compiles code for the three major platforms
 * How to make syscalls on Linux, OSX and Windows
 
