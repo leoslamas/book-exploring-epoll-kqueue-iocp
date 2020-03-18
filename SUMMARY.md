@@ -13,7 +13,7 @@
   * [IOCP](the-recipie-for-an-eventqueue/iocp.md)
   * [Epoll](the-recipie-for-an-eventqueue/epoll.md)
   * [Kqueue](the-recipie-for-an-eventqueue/kqueue.md)
-  * [It's not that easy](appendix-1/its-not-that-easy.md)
+  * [It's not that easy](the-recipie-for-an-eventqueue/its-not-that-easy.md)
 
 ## Appendix <a id="appendix-1"></a>
 

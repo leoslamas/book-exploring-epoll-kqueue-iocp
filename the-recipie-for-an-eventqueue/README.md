@@ -1,15 +1,11 @@
----
-description: >-
-  Let's jump right to it and introduce all the major pieces we need. It's
-  surprisingly easy.
----
-
 # Part 2: A cross platform event queue
 
-In this part of the book we'll implement the `minimio`library, an extremely simplified version of a cross platform event queue.
+So you're either among the 1 % of potential readers actually interested in implementing a toy example of a cross platform event loop, or you couldn't resist checking out part 2 out despite my warnings. Well, don't say I didn't warn you. It's a lot of ground to cover so let's get going!
+
+In this part of the book we'll implement the `minimio`library, an extremely simplified version of a cross platform event queue. I actually encourage you to clone or fork the repository and play around with the code as we go through.
 
 {% hint style="info" %}
-A brief overview and reference for IOCP, Epoll and Kqueue can be found in the appendix chapters [IOCP Reference](../appendix-1/iocp.md), [Epoll Reference](../appendix-1/epoll.md) and [Kqueue Reference](../appendix-1/kqueue.md). Head over there and take a quick look to get a quick introduction of each of them.
+[The respository can be found here.](https://github.com/cfsamson/examples-minimio)
 {% endhint %}
 
 In this chapter we want to introduce and prepare all the pieces we need to let a user can set up an event queue using our library. Our end goal is something which looks something like this:
@@ -47,19 +43,19 @@ The `Poll`structure is the heart of our event queue. This structure implements o
 
 ### `Registrator`
 
-The `Registrator`has one job. It tells our operating system that we're interested in an event. An example of this is when data is ready for us to read on a network socket. The registrator is tied to `Poll`in the sense that we want the OS to wake us up from the call to `poll()`when the event is ready. Every event queue has an ID that is unique. Typically `Registrator`and `Poll`is on two different threads.
+The `Registrator`has one job. It tells our operating system that we're interested in an event. An example of this is when data is ready for us to read on a network socket. The `Registrator` is tied to `Poll`in the sense that we want the OS to wake us up from the call to `poll()`when the event is ready. Every event queue has an ID that is unique. Typically, `Registrator`and `Poll`is on two different threads.
 
 ### `Event`
 
-`Poll`can wait for any type of event it supports. Some examples of this is `Read`or `Write`events on a socket or a pipe. We call `Read`and `Write`. These types of events depends on what kind of resource we're working with. Timeouts is another type of event all systems support.
+`Poll`can wait for any type of event it supports. Some examples of this is `Read`or `Write`events on a socket or a pipe. These types of events depend on what kind of resource we're working with. Timeouts are another type of event which most systems support.
 
 ### `TcpStream` \(or any other resource\)
 
-TcpStream is an I/O resource we want to register an interest in. This needs to be abstracted over if we want to support both `Epoll`,`Kqueue`and `IOCP`. We'll only cover the case of beeing interested in `Read`events on the `TcpStream`but this is only limited to what kind of resources the OS allows us to register interests on.
+TcpStream is an I/O resource we want to register an interest in. This needs to be abstracted over if we want to support both `Epoll`,`Kqueue`and `IOCP`. We'll only cover the case of being interested in `Read`events on the `TcpStream`but this is only limited to what kind of resources the OS allows us to register interests on.
 
 ### `Token`
 
-A token will be an unique identifier for the event. We need this to actually be able to tell the different events from each other.
+A token will be a unique identifier for the event. We need this to actually be able to tell the different events from each other.
 
-This is really all there is to it. The concept is not difficult, but making these compontents requires a bit of effort since we're dealing with three different implementations. Let's dive and start desiging our API.
+This is really all there is to it. The concept is not difficult, but making these components requires a bit of effort since we're dealing with three different implementations. Let's dive and start designing our API.
 

@@ -127,7 +127,7 @@ Remember that Rust inherits its memory model for atomics from C++ 20, and C copi
 Relaxed memory ordering on atomics will prevent the compiler from reordering these instructions themselves, but, on weakly ordered CPUs, it might reorder all other memory accesses. It's OK if you only increment a counter, but it might get you into trouble if you use a flag to implement a spin-lock for example, since you can't trust that "normal" memory access before and after the flag is set is not reordered.
 
 **On the observer CPU:**  
-Both the compiler and the CPU are free to reorder any other memory access except from switching two `Relaxed` load/stores with each other. The observer core might observe operations in a different order than the "program order" \(as we wrote them\). They will however, always see `Relaxed` operation-A before `Relaxed` operation-B if we wrote them in that order.
+Both the compiler and the CPU are free to reorder any other memory access except from switching two `Relaxed` load/stores with each other. The observer core might observe operations in a different order than the "program order" \(as we wrote them\). They will, however, always see `Relaxed` operation-A before `Relaxed` operation-B if we wrote them in that order.
 
 `Relaxed` is therefore the weakest of the possible memory orderings. It implies that the operation does not do any specific synchronization with the other CPUs.
 
@@ -142,7 +142,7 @@ Take a [look at this article](https://preshing.com/20121019/this-is-why-they-cal
 ### Acquire
 
 **On the current CPU:**  
-Any memory operation written after the `Acquire` access stays after it. It's meant to be paired with a `Release` memory ordering flag, forming a sort of a "memory sandwich". All memory access between the load and store will be synchronized with the other CPUs.
+Any memory operation written after the `Acquire` access stays after it. It's meant to be paired with a `Release` memory ordering flag, forming a sort of "memory sandwich". All memory access between the load and store will be synchronized with the other CPUs.
 
 On weakly ordered systems, this might result in using special CPU instructions before the `Acquire` operation, which forces the current core to process all messages in its mailbox \(many CPUs have both serializing and memory ordering instructions\). A _memory fence_ will most likely also be implemented to prevent the CPU from reordering memory access before the `Acquire` load. The Acquire operation will therefore be synchronized with modifications on memory done on the other CPUs.
 
@@ -187,7 +187,7 @@ That means some global synchronization must happen either before each `Acquire` 
 1. An `Acquire` load must ensure that it processes all messages and if any other core has invalidated any memory we load, it must fetch the correct value.
 2. A `Release` store must be atomic and invalidate all other caches holding that value before it modifies it.
 
-Only doing one of these is enough though. This is partially what makes it weaker than `SeqCst` but also more performant.
+Only doing one of these is enough, though. This is partially what makes it weaker than `SeqCst` but also more performant.
 
 **On the observer CPU:**  
 An observing CPU might not see these changes in any specific order, unless it itself uses an `Acquire` load of the memory. If it does, it will see all memory which has been modified between the `Acquire` and the `Release`, including the `Release` store itself.
@@ -221,6 +221,8 @@ In this part of this article, I'll talk about this using a strongly ordered CPU 
 `SeqCst` has been [critiqued](https://github.com/rust-lang/nomicon/issues/166) for being promoted as the recommended ordering to use and I've seen several [objections](https://github.com/crossbeam-rs/crossbeam/issues/317) about using it since it seems to be hard to prove that you have a **good** reason for using it. It has also been criticized for being [slightly broken](https://plv.mpi-sws.org/scfix/paper.pdf).
 
 This figure should explain where `SeqCst` might fail in upholding it's guarantees:
+
+![https://plv.mpi-sws.org/scfix/paper.pdf](../.gitbook/assets/bilde%20%281%29.png)
 
 Got it? Good! We'll focus on the practical sides of `SeqCst` and not the theoretical foundations of it from now on.
 
@@ -273,7 +275,7 @@ Rusts documentation for `Release` re-iterates on that and states:
 
 > > ... In particular, all **previous** writes become visible to all threads that perform an [`Acquire`](https://doc.rust-lang.org/std/sync/atomic/enum.Ordering.html#variant.Acquire) \(or stronger\) load of this value.
 
-An now is the time where we go and take a closer look that one _non-guarantee_ I mentioned in the start. The [Intel Developers Manual](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf) goes in to a little more detail in chapter 8.2.3.4:
+An now is the time when we go and take a closer look that one _non-guarantee_ I mentioned in the start. The [Intel Developers Manual](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf) goes in to a little more detail in chapter 8.2.3.4:
 
 > 8.2.3.4 Loads May Be Reordered with Earlier Stores to Different Locations
 >
@@ -324,7 +326,7 @@ retq
 
 The interesting change here is the store operation which is now changed from a simple load to a special instruction `xchgb %al, example::X.0.0(%rip)`. This is an _atomic operation_ \(`xchg`has an [implicit `lock`prefix](https://en.wikibooks.org/wiki/X86_Assembly/Data_Transfer)\).
 
-Since the `xchg` instruction is a [locked]() instruction \(when it refers to memory\) it will make sure that all cache lines on other cores referring to the same memory are locked when the memory is fetched and then invalidated after the modification. In addition it works as a full memory fence which we can derive from chapter 8.2.3.9 in the [Intel Developer Manua](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf)l:
+Since the `xchg` instruction is a [locked]() instruction \(when it refers to memory\) it will make sure that all cache lines on other cores referring to the same memory are locked when the memory is fetched and then invalidated after the modification. In addition, it works as a full memory fence which we can derive from chapter 8.2.3.9 in the [Intel Developer Manua](https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf)l:
 
 > 8.2.3.9 Loads and Stores Are Not Reordered with Locked Instructions
 >

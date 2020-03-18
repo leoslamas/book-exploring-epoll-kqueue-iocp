@@ -1,6 +1,6 @@
 # Kqueue
 
-
+Since both `Epoll` and `Kqueue` is re implementing the same basic logic as we did for `IOCP` I'll let the code speak for itself. I have commented the code pretty extensively to clarify some interesting differences, though.
 
 ```rust
 use crate::{Events, Interests, Token};
@@ -184,7 +184,9 @@ mod ffi {
     pub const EV_ENABLE: u16 = 0x4;
     pub const EV_ONESHOT: u16 = 0x10;
     pub const EV_CLEAR: u16 = 0x20;
-
+    
+    // To be able to pass in a timeout to `Kqueue`we need to use 
+    // a timespec struct to pass in the information
     #[derive(Debug)]
     #[repr(C)]
     pub(super) struct Timespec {
@@ -195,7 +197,10 @@ mod ffi {
     }
 
     impl Timespec {
-        pub fn from_millis(milliseconds: i32) -> Self {
+         /// Convenience function so that we can easily create a `timespec` struct
+         /// from milliseconds. We won't support granularity smaller than ms 
+         /// in our library even though we could on macos.
+         pub fn from_millis(milliseconds: i32) -> Self {
             let seconds = milliseconds / 1000;
             let nanoseconds = (milliseconds % 1000) * 1000 * 1000;
             Timespec {
@@ -325,82 +330,5 @@ pub fn close(fd: RawFd) -> io::Result<()> {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::Interests;
-    #[test]
-    fn create_kevent_works() {
-        let selector = Selector::new().unwrap();
-        let mut sock = TcpStream::connect("www.google.com:80").unwrap();
-        let poll_is_dead = Arc::new(AtomicBool::new(false));
-        let registrator = selector.registrator(poll_is_dead.clone());
-
-        registrator
-            .register(&mut sock, 1, Interests::READABLE)
-            .unwrap();
-    }
-
-    #[test]
-    fn select_kevent_works() {
-        let selector = Selector::new().unwrap();
-        let mut sock: TcpStream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
-        let request = "GET /delay/1000/url/http://www.google.com HTTP/1.1\r\n\
-                       Host: slowwly.robertomurray.co.uk\r\n\
-                       Connection: close\r\n\
-                       \r\n";
-        sock.write_all(request.as_bytes())
-            .expect("Error writing to stream");
-        let poll_is_dead = Arc::new(AtomicBool::new(false));
-        let registrator = selector.registrator(poll_is_dead.clone());
-
-        registrator
-            .register(&sock, 99, Interests::READABLE)
-            .unwrap();
-
-        let mut events = vec![Event::zero()];
-
-        selector
-            .select(&mut events, None)
-            .expect("waiting for event.");
-
-        assert_eq!(events[0].udata, 99);
-    }
-
-    #[test]
-    fn read_kevent_works() {
-        let selector = Selector::new().unwrap();
-        let mut sock: TcpStream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
-        let request = "GET /delay/1000/url/http://www.google.com HTTP/1.1\r\n\
-                       Host: slowwly.robertomurray.co.uk\r\n\
-                       Connection: close\r\n\
-                       \r\n";
-        sock.write_all(request.as_bytes())
-            .expect("Error writing to stream");
-
-        let poll_is_dead = Arc::new(AtomicBool::new(false));
-        let registrator = selector.registrator(poll_is_dead.clone());
-
-        registrator
-            .register(&sock, 100, Interests::READABLE)
-            .unwrap();
-
-        let mut events = vec![Event::zero()];
-
-        selector
-            .select(&mut events, None)
-            .expect("waiting for event.");
-
-        let mut buff = String::new();
-        assert!(buff.is_empty());
-        sock.read_to_string(&mut buff).expect("Reading to string.");
-
-        assert_eq!(events[0].udata, 100);
-        println!("{}", &buff);
-        assert!(!buff.is_empty());
-    }
-}
-
 ```
 

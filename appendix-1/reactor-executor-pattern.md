@@ -18,7 +18,7 @@ Before we talk more about how this relates to `Futures`lets first take a look at
    1. The user code representing a task we have to complete
    2. Needs to be interruptible so it can be suspended and yield control to the Executor instead of waiting for I/O.
 
-### The Reactor
+## The Reactor
 
 The cross platform Epoll/Kqueue/IOCP library which we implement in this book can be viewed as the main building block of the reactor - the event queue part. The only missing piece is a way for us to communicate with the `Executor`that an event is ready and we actually need to receive the events which are ready and wake up the task which will finish. The simplest way to do this is to use a `Channel`which is exactly what we'll do.
 
@@ -66,12 +66,12 @@ impl Reactor {
 ```
 
 {% hint style="info" %}
-### How does this relate async in Rust?
+## How does this relate async in Rust?
 
 In Rust a library like [mio](https://github.com/tokio-rs/mio) will be what drives the `Reactor` part. In Rust we have `Futures`which pass on a `Waker`to the `Reactor`. Instead of communicating directly with the executor through a channel, the Reactor wil call `Waker.wake()`on the relevant `Waker`once an event is ready.
 {% endhint %}
 
-### Executor
+## Executor
 
 The executor needs to schedule the execution of events which are ready and provide a way for us to set handlers for events. In our example we'll specifically set a handler function which will resume our task when the corresponding event is ready.
 
@@ -113,14 +113,14 @@ It's not very sophisticated but will do the work for us. As you see a handler, w
 There is of course many ways which we could choose to handle this, feel free to play around and try for yourself.
 
 {% hint style="info" %}
-### How does this relate to async in Rust?
+## How does this relate to async in Rust?
 
 In rust libraries like `Tokio`or `async_std`takes on the role as Executors. Generally a `Reactor`and an `Executor`will be provided together in a runtime so you won't have to actually call different methods on the `Executor`and `Reactor`like we do here and instead leave that to the runtime you use.
 
 However, there is nothing in Rusts standard library or language which prevents you to choose an `Reactor`and an `Executor`based on your needs.
 {% endhint %}
 
-### Task
+## Task
 
 To actually use our `Reactor`and `Executor`we need to provide some code which glues everything together. It looks like this:
 
@@ -129,14 +129,14 @@ fn main() {
     let (evt_sender, evt_reciever) = channel();
     let reactor = Reactor::new(evt_sender);
     let mut executor = Excutor::new(evt_reciever);
-    
+
     // ===== TASK =====
     let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
     let request = b"GET /delay/1000/url/http://www.google.com HTTP/1.1\r\nHost: slowwly.robertomurray.co.uk\r\nConnection: close\r\n\r\n";
 
     stream.write_all(request).expect("Stream write err.");
     reactor.register_stream_read_interest(&mut stream, TEST_TOKEN);
-    
+
     // ===== SUSPEND TASK =====
     executor.suspend(TEST_TOKEN, move || {
         let mut buffer = String::new();
@@ -144,7 +144,7 @@ fn main() {
         assert!(!buffer.is_empty(), "Got an empty buffer");
         reactor.stop_loop();
     });
-    
+
     // ===== TASK END =====
 
     executor.block_on_all();
@@ -165,18 +165,18 @@ There are a few things to note here. First of all the `TcpStream`is provided to 
 7. We run our `Executor`and block until all tasks are finished
 
 {% hint style="info" %}
-### How does this relate to async in Rust?
+## How does this relate to async in Rust?
 
 We have a task here which we manually stop in the middle and then resume once data is ready for us. The task is "Get data from the socket and assert that we actually received some data".
 
-To accomplish this we use a callback based approach. In Rust, we'd normally use `Futures`to do this. We'll cover this in more detail in a later book, but it's important to remember that a `Future`is just a different way of creating an interruptible task. 
+To accomplish this we use a callback based approach. In Rust, we'd normally use `Futures`to do this. We'll cover this in more detail in a later book, but it's important to remember that a `Future`is just a different way of creating an interruptible task.
 
 In addition, Rusts `Futures`provide a `Waker`which should be used to let the `Executor`know that a task can be woken up and resumed. In our example we have a tight coupling between the executor and reactor through the use of a regular `Channel`as a way to communicate. With `Futures`the executor and reactor can be totally decoupled.
 
 As a final note. We run part of our task on the main thread. Normally, a runtime will let you just `spawn`your task an take care of starting, suspending and resuming it for you.
 {% endhint %}
 
-### Full code example
+## Full code example
 
 To run this example we'll have to rely on the code we're actually going to write in this book.
 
