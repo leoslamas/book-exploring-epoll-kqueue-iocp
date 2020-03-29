@@ -57,7 +57,7 @@ Both Epoll and Kqueue is what we call "readiness based". This means that they'll
 
 ### Completion based models
 
-IOCP is and abbreviation of Input/Output Completion Ports. As the name implies this is a completion-based model which means that we get a notification when an operation has happened. An example of this is when data _has been read_ into a buffer.
+IOCP is an abbreviation of Input/Output Completion Ports. As the name implies this is a completion-based model which means that we get a notification when an operation has happened. An example of this is when data _has been read_ into a buffer.
 
 While these differences seem small, it has quite an impact on the difficulty of creating a cross platform event queue as we'll see in [part 2](../the-recipie-for-an-eventqueue/) of this book. 
 
