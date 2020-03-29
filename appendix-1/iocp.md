@@ -17,7 +17,7 @@ This syscall gives us a handle to a completion port. To us, this will represent 
 
 ### WSARecv
 
-This syscall registers an interest in `Read`events on a socket. Windows calls this an `Recieve`event.
+This syscall registers an interest in `Read`events on a socket. Windows calls this an `Receive`event.
 
 {% embed url="https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecv" %}
 

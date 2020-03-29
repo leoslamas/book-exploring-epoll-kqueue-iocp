@@ -195,9 +195,9 @@ The last important part is how we register interest in events to our event queue
 ```rust
 #[test]
 fn proposed_api() {
-    let (evt_sender, evt_reciever) = channel();
+    let (evt_sender, evt_receiver) = channel();
     let mut reactor = Reactor::new(evt_sender);
-    let mut executor = Excutor::new(evt_reciever);
+    let mut executor = Excutor::new(evt_receiver);
 
     let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
     let request = b"GET /delay/1000/url/http://www.google.com HTTP/1.1\r\nHost: slowwly.robertomurray.co.uk\r\nConnection: close\r\n\r\n";
@@ -258,9 +258,9 @@ const TEST_TOKEN: usize = 10; // Hard coded for this test only
 
 #[test]
 fn proposed_api() {
-    let (evt_sender, evt_reciever) = channel();
+    let (evt_sender, evt_receiver) = channel();
     let mut reactor = Reactor::new(evt_sender);
-    let mut executor = Excutor::new(evt_reciever);
+    let mut executor = Excutor::new(evt_receiver);
 
     let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
     let request = b"GET /delay/1000/url/http://www.google.com HTTP/1.1\r\nHost: slowwly.robertomurray.co.uk\r\nConnection: close\r\n\r\n";
@@ -323,12 +323,12 @@ impl Drop for Reactor {
 
 struct Excutor {
     events: Vec<(usize, Box<dyn FnMut()>)>,
-    evt_reciever: Receiver<usize>,
+    evt_receiver: Receiver<usize>,
 }
 
 impl Excutor {
-    fn new(evt_reciever: Receiver<usize>) -> Self {
-        Excutor { events: vec![], evt_reciever }
+    fn new(evt_receiver: Receiver<usize>) -> Self {
+        Excutor { events: vec![], evt_receiver }
     }
     fn suspend(&mut self, id: usize, f: impl FnMut() + 'static) {
         self.events.push((id, Box::new(f)));
@@ -341,9 +341,9 @@ impl Excutor {
         f();
     }
     fn block_on_all(&mut self) {
-        while let Ok(recieved_token) = self.evt_reciever.recv() {
-            assert_eq!(TEST_TOKEN, recieved_token, "Non matching tokens.");
-            self.resume(recieved_token);
+        while let Ok(received_token) = self.evt_receiver.recv() {
+            assert_eq!(TEST_TOKEN, received_token, "Non matching tokens.");
+            self.resume(received_token);
         }
     }
 }

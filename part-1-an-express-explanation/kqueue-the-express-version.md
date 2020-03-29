@@ -104,7 +104,7 @@ fn main() {
         let mut stream = TcpStream::connect(addr).unwrap();
 
         // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in decending order so we sould recieve 
+        // We'll create delays in decending order so we sould receive 
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -188,7 +188,7 @@ fn main() {
                 ptr::null(),              // no changes this time
                 0,                        // length of change array is 0
                 events.as_mut_ptr(),      // we expect to get events back
-                events.capacity() as i32, // how many events we can recieve
+                events.capacity() as i32, // how many events we can receive
                 ptr::null(),              // indefinite timeout
             )
         };
@@ -205,7 +205,7 @@ fn main() {
         unsafe { events.set_len(res as usize) };
 
         for event in events {
-            println!("RECIEVED: {}", event.udata);
+            println!("RECEIVED: {}", event.udata);
             event_counter -= 1;
         }
     }
@@ -293,13 +293,13 @@ The fact that we can make multiple changes to the queue using only a single sysc
 **Running this code on a system running `macos`should give the following result:**
 
 ```text
-RECIEVED: 4
-RECIEVED: 5
-RECIEVED: 3
-RECIEVED: 2
-RECIEVED: 1
+RECEIVED: 4
+RECEIVED: 5
+RECEIVED: 3
+RECEIVED: 2
+RECEIVED: 1
 FINISHED
 ```
 
-If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECIEVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
+If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECEIVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
 

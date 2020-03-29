@@ -307,7 +307,7 @@ fn main() {
 
         for event in events {
             let operation = unsafe { &*(event.lp_overlapped as *const Operation) };
-            println!("RECIEVED: {}", operation.context);
+            println!("RECEIVED: {}", operation.context);
             event_counter -= 1;
         }
     }
@@ -473,15 +473,15 @@ When calling `GetQueuedCompletionStatusEx`a pointer to the `WSAOVERLAPPED`struct
 **Running this code should give you the following result:**
 
 ```text
-RECIEVED: 5
-RECIEVED: 4
-RECIEVED: 3
-RECIEVED: 2
-RECIEVED: 1
+RECEIVED: 5
+RECEIVED: 4
+RECEIVED: 3
+RECEIVED: 2
+RECEIVED: 1
 FINISHED
 ```
 
-Unlike the `epoll`printout I didn't include the debug print of the `Operation`struct since it's too much data to show here, but if you change line 161 to `println!("RECIEVED: {:?}", operation);`you'll see all the data we get returned. 
+Unlike the `epoll`printout I didn't include the debug print of the `Operation`struct since it's too much data to show here, but if you change line 161 to `println!("RECEIVED: {:?}", operation);`you'll see all the data we get returned. 
 
 Often the `context`field will be a callback you want to run once the event has competed.
 

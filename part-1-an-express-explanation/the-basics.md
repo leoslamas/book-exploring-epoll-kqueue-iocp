@@ -119,7 +119,7 @@ fn main() {
         let mut stream = TcpStream::connect(addr).unwrap();
 
         // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in decending order so we sould recieve 
+        // We'll create delays in decending order so we sould receive 
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -196,7 +196,7 @@ fn main() {
         unsafe { events.set_len(res as usize) };
 
         for event in events {
-            println!("RECIEVED: {:?}", event);
+            println!("RECEIVED: {:?}", event);
             event_counter -= 1;
         }
     }
@@ -246,11 +246,11 @@ Good job! We have actually created our own epoll-backed event queue which notifi
 If we run the code we get:
 
 ```text
-RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
-RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
-RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
-RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
-RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
+RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
+RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
+RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
+RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
+RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
 FINISHED
 ```
 
@@ -287,11 +287,11 @@ Notice the `#[repr(C, packed)]`attribute? This tells the Rust compiler to treat 
 **Running our example again gives us what we expected:**
 
 ```text
-RECIEVED: Event { events: 1, epoll_data: 5 }
-RECIEVED: Event { events: 1, epoll_data: 4 }
-RECIEVED: Event { events: 1, epoll_data: 3 }
-RECIEVED: Event { events: 1, epoll_data: 2 }
-RECIEVED: Event { events: 1, epoll_data: 1 }
+RECEIVED: Event { events: 1, epoll_data: 5 }
+RECEIVED: Event { events: 1, epoll_data: 4 }
+RECEIVED: Event { events: 1, epoll_data: 3 }
+RECEIVED: Event { events: 1, epoll_data: 2 }
+RECEIVED: Event { events: 1, epoll_data: 1 }
 FINISHED
 ```
 

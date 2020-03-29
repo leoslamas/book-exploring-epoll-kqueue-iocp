@@ -78,7 +78,7 @@ impl Selector {
         })
     }
 
-    /// This function blocks and waits until an event has been recieved. `timeout` None means
+    /// This function blocks and waits until an event has been received. `timeout` None means
     /// the poll will never time out.
     pub fn select(&self, events: &mut Events, timeout_ms: Option<i32>) -> io::Result<()> {
         events.clear();
