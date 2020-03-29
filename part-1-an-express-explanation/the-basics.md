@@ -112,7 +112,7 @@ fn main() {
     // not closed
     let mut streams = vec![];
 
-    // We crate 5 requests to an an endpoint we control the delay on
+    // We create 5 requests to an endpoint we control the delay on
     for i in 1..6 {
         // This site has an api to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
@@ -147,7 +147,7 @@ fn main() {
         //
         // `epoll_data` is user provided data, so we can put a pointer or 
         // an integer value there to identify the event. We just use 
-        // `i` which is the loop count to indentify the events.
+        // `i` which is the loop count to identify the events.
         let mut event = ffi::Event {
             events: (ffi::EPOLLIN | ffi::EPOLLONESHOT) as u32,
             epoll_data: i,
@@ -175,14 +175,14 @@ fn main() {
     // Now we wait for events
     while event_counter > 0 {
 
-        // The API expects us to pass in an arary of `Event` structs. 
+        // The API expects us to pass in an array of `Event` structs. 
         // This is how the OS communicates back to us what has happened.
         let mut events = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. The timeout 
         // of `-1` means no timeout so we'll block until something happens. 
         // Now the OS suspends our thread doing a context switch and work 
-        // on someting else - or just perserve power.
+        // on something else - or just preserve power.
         let res = unsafe { ffi::epoll_wait(queue, events.as_mut_ptr(), 10, -1) };
         // This result will return the number of events which occurred 
         // (if any) or a negative number if it's an error.

@@ -182,7 +182,7 @@ fn main() {
     // and we need a place to store buffers filled by the OS
     let mut buffers: Vec<Vec<u8>> = Vec::with_capacity(5);
 
-    // We crate 5 requests to an an endpoint we control the delay on
+    // We create 5 requests to an endpoint we control the delay on
     for i in 1..6 {
         // This site has an api to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
@@ -223,7 +223,7 @@ fn main() {
         // store the operation so its possible for us to retrieve it afterwards
         ops.push(op);
         let op = ops.last_mut().unwrap();
-        // we need to coerce it to a pointer tp `Operation` since we'll cast it
+        // we need to coerce it to a pointer to `Operation` since we'll cast it
         // as a pointer to `WSAOVERLAPPED` later.
         let op_ptr: *mut Operation = op;
 
@@ -275,14 +275,14 @@ fn main() {
 
     // Now we wait for events
     while event_counter > 0 {
-        // The API expects us to pass in an arary of `Event` structs.
+        // The API expects us to pass in an array of `Event` structs.
         // This is how the OS communicates back to us what has happened.
         let mut events: Vec<ffi::OVERLAPPED_ENTRY> = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. The timeout
         // of `-1` means no timeout so we'll block until something happens.
         // Now the OS suspends our thread doing a context switch and work
-        // on someting else - or just perserve power.
+        // on something else - or just preserve power.
 
         let mut entries_removed: u32 = 0;
         let res = unsafe {
@@ -457,7 +457,7 @@ The problem with this is that the `CompletionKey`is registered on a _per resourc
 A common way to solve this is using the technique of wrapping the `WSAOVERLAPPED`structure which is registered with each event \(on our case in the `WSARecv`syscall\) in another data structure which adds context to identify the event that occurred.
 
 {% hint style="info" %}
-This technique is used both in the [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/detail/win_iocp_io_service.hpp) implementation of `IOCP`and in `mio`. Here is a linkt to the relevant [lines of code in mio's v0.6 branch](https://github.com/tokio-rs/mio/blob/292f26c22603564a21c34de053c6c75a34c6457b/src/sys/windows/selector.rs#L476-L521) \(mio has recently changed to wepoll which avoids IOCP so we need to look at previous versions to look at the implementation\).
+This technique is used both in the [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/detail/win_iocp_io_service.hpp) implementation of `IOCP`and in `mio`. Here is a link to the relevant [lines of code in mio's v0.6 branch](https://github.com/tokio-rs/mio/blob/292f26c22603564a21c34de053c6c75a34c6457b/src/sys/windows/selector.rs#L476-L521) \(mio has recently changed to wepoll which avoids IOCP so we need to look at previous versions to look at the implementation\).
 {% endhint %}
 
 Now, to do that we take advantage of the fact that when we create a structure with the `#[repr(C)]`attribute and add a field of the type `WSAOVERLAPPED`first, the structure will have the same memory layout as a `WSAOVERLAPPED`struct for the first bytes.

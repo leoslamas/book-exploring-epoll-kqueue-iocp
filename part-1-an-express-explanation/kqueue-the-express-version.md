@@ -97,14 +97,14 @@ fn main() {
     // not closed
     let mut streams = vec![];
 
-    // We crate 5 requests to an an endpoint we control the delay on
+    // We create 5 requests to an endpoint we control the delay on
     for i in 1..6 {
         // This site has an api to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
         let mut stream = TcpStream::connect(addr).unwrap();
 
         // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in decending order so we sould receive 
+        // We'll create delays in descending order so we should receive 
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -129,7 +129,7 @@ fn main() {
         // `EV_ADD` indicates that we're adding a new event to the queue. 
         // `EV_ENABLE` means that we want the event returned when triggered
         // `EV_ONESHOT` mans that we want the vent deleted from the queue
-        // on the first occurance. If we don't do that we need to `deregister` 
+        // on the first occurrence. If we don't do that we need to `deregister` 
         // our interest manually when we're done with the socket (which is fine
         // but for this example it's easier to just delete it first time)
         //
@@ -174,14 +174,14 @@ fn main() {
     // Now we wait for events
     while event_counter > 0 {
 
-        // The API expects us to pass in an arary of `Kevent` structs. 
+        // The API expects us to pass in an array of `Kevent` structs. 
         // This is how the OS communicates back to us what has happened.
         let mut events: Vec<ffi::Kevent> = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. Passing in a
-        // null pointer as the timeout waits indefinately
+        // null pointer as the timeout waits indefinitely
         // Now the OS suspends our thread doing a context switch and work 
-        // on someting else - or just perserve power.
+        // on something else - or just preserve power.
         let res = unsafe { 
             ffi::kevent(
                 queue,                    // same kqueue
