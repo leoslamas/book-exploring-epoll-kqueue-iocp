@@ -88,7 +88,7 @@ fn main() {
     // First we create the event queue.
     // The size argument is ignored but needs to be larger than 0
     let queue = unsafe { ffi::kqueue() };
-    // We handle errors in this example by just panicing.
+    // We handle errors in this example by just panicking.
     if queue < 0 {
         panic!(io::Error::last_os_error());
     }

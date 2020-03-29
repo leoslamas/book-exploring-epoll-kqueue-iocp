@@ -158,7 +158,7 @@ fn main() {
     // The size argument is ignored but needs to be larger than 0
     let queue =
         unsafe { ffi::CreateIoCompletionPort(ffi::INVALID_HANDLE_VALUE, 0, ptr::null_mut(), 0) };
-    // We handle any error here panicing.
+    // We handle any error here panicking.
     if (queue as *mut usize).is_null() {
         panic!(std::io::Error::last_os_error());
     }

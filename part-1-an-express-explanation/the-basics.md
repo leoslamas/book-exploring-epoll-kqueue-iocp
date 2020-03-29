@@ -103,7 +103,7 @@ fn main() {
     let queue = unsafe { ffi::epoll_create(1) };
     // This is how we basically check for errors and handle them using most 
     // C APIs
-    // We handle them by just panicing here in our example.
+    // We handle them by just panicking here in our example.
     if queue < 0 {
         panic!(io::Error::last_os_error());
     }
