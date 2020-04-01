@@ -80,7 +80,7 @@ impl Selector {
         Ok(Selector { kq: kqueue()? })
     }
 
-    /// This function blocks and waits until an event has been recieved. It never times out.
+    /// This function blocks and waits until an event has been received. It never times out.
     pub fn select(&self, events: &mut Events, timeout_ms: Option<i32>) -> io::Result<()> {
         // TODO: get n_events from self
         let n_events = events.capacity() as i32;

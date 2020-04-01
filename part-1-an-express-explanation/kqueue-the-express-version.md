@@ -88,7 +88,7 @@ fn main() {
     // First we create the event queue.
     // The size argument is ignored but needs to be larger than 0
     let queue = unsafe { ffi::kqueue() };
-    // We handle errors in this example by just panicing.
+    // We handle errors in this example by just panicking.
     if queue < 0 {
         panic!(io::Error::last_os_error());
     }
@@ -97,14 +97,14 @@ fn main() {
     // not closed
     let mut streams = vec![];
 
-    // We crate 5 requests to an an endpoint we control the delay on
+    // We create 5 requests to an endpoint we control the delay on
     for i in 1..6 {
         // This site has an api to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
         let mut stream = TcpStream::connect(addr).unwrap();
 
         // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in decending order so we sould recieve 
+        // We'll create delays in descending order so we should receive 
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -129,7 +129,7 @@ fn main() {
         // `EV_ADD` indicates that we're adding a new event to the queue. 
         // `EV_ENABLE` means that we want the event returned when triggered
         // `EV_ONESHOT` mans that we want the vent deleted from the queue
-        // on the first occurance. If we don't do that we need to `deregister` 
+        // on the first occurrence. If we don't do that we need to `deregister` 
         // our interest manually when we're done with the socket (which is fine
         // but for this example it's easier to just delete it first time)
         //
@@ -174,21 +174,21 @@ fn main() {
     // Now we wait for events
     while event_counter > 0 {
 
-        // The API expects us to pass in an arary of `Kevent` structs. 
+        // The API expects us to pass in an array of `Kevent` structs. 
         // This is how the OS communicates back to us what has happened.
         let mut events: Vec<ffi::Kevent> = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. Passing in a
-        // null pointer as the timeout waits indefinately
+        // null pointer as the timeout waits indefinitely
         // Now the OS suspends our thread doing a context switch and work 
-        // on someting else - or just perserve power.
+        // on something else - or just preserve power.
         let res = unsafe { 
             ffi::kevent(
                 queue,                    // same kqueue
                 ptr::null(),              // no changes this time
                 0,                        // length of change array is 0
                 events.as_mut_ptr(),      // we expect to get events back
-                events.capacity() as i32, // how many events we can recieve
+                events.capacity() as i32, // how many events we can receive
                 ptr::null(),              // indefinite timeout
             )
         };
@@ -205,7 +205,7 @@ fn main() {
         unsafe { events.set_len(res as usize) };
 
         for event in events {
-            println!("RECIEVED: {}", event.udata);
+            println!("RECEIVED: {}", event.udata);
             event_counter -= 1;
         }
     }
@@ -293,13 +293,13 @@ The fact that we can make multiple changes to the queue using only a single sysc
 **Running this code on a system running `macos`should give the following result:**
 
 ```text
-RECIEVED: 4
-RECIEVED: 5
-RECIEVED: 3
-RECIEVED: 2
-RECIEVED: 1
+RECEIVED: 4
+RECEIVED: 5
+RECEIVED: 3
+RECEIVED: 2
+RECEIVED: 1
 FINISHED
 ```
 
-If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECIEVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
+If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECEIVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
 

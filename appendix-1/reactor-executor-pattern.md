@@ -82,12 +82,12 @@ A simple executor can look like this:
 ```rust
 struct Excutor {
     events: Vec<(usize, Box<dyn FnMut()>)>,
-    evt_reciever: Receiver<usize>,
+    evt_receiver: Receiver<usize>,
 }
 
 impl Excutor {
-    fn new(evt_reciever: Receiver<usize>) -> Self {
-        Excutor { events: vec![], evt_reciever }
+    fn new(evt_receiver: Receiver<usize>) -> Self {
+        Excutor { events: vec![], evt_receiver }
     }
     fn suspend(&mut self, id: usize, f: impl FnMut() + 'static) {
         self.events.push((id, Box::new(f)));
@@ -100,9 +100,9 @@ impl Excutor {
         f();
     }
     fn block_on_all(&mut self) {
-        while let Ok(recieved_token) = self.evt_reciever.recv() {
-            assert_eq!(TEST_TOKEN, recieved_token, "Non matching tokens.");
-            self.resume(recieved_token);
+        while let Ok(received_token) = self.evt_receiver.recv() {
+            assert_eq!(TEST_TOKEN, received_token, "Non matching tokens.");
+            self.resume(received_token);
         }
     }
 }
@@ -126,9 +126,9 @@ To actually use our `Reactor`and `Executor`we need to provide some code which gl
 
 ```rust
 fn main() {
-    let (evt_sender, evt_reciever) = channel();
+    let (evt_sender, evt_receiver) = channel();
     let reactor = Reactor::new(evt_sender);
-    let mut executor = Excutor::new(evt_reciever);
+    let mut executor = Excutor::new(evt_receiver);
 
     // ===== TASK =====
     let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
@@ -203,9 +203,9 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 const TEST_TOKEN: usize = 10; 
 
 fn main() {
-    let (evt_sender, evt_reciever) = channel();
+    let (evt_sender, evt_receiver) = channel();
     let reactor = Reactor::new(evt_sender);
-    let mut executor = Excutor::new(evt_reciever);
+    let mut executor = Excutor::new(evt_receiver);
 
     let mut stream = TcpStream::connect("slowwly.robertomurray.co.uk:80").unwrap();
     let request = b"GET /delay/1000/url/http://www.google.com HTTP/1.1\r\nHost: slowwly.robertomurray.co.uk\r\nConnection: close\r\n\r\n";
@@ -270,12 +270,12 @@ impl Reactor {
 
 struct Excutor {
     events: Vec<(usize, Box<dyn FnMut()>)>,
-    evt_reciever: Receiver<usize>,
+    evt_receiver: Receiver<usize>,
 }
 
 impl Excutor {
-    fn new(evt_reciever: Receiver<usize>) -> Self {
-        Excutor { events: vec![], evt_reciever }
+    fn new(evt_receiver: Receiver<usize>) -> Self {
+        Excutor { events: vec![], evt_receiver }
     }
     fn suspend(&mut self, id: usize, f: impl FnMut() + 'static) {
         self.events.push((id, Box::new(f)));
@@ -289,10 +289,10 @@ impl Excutor {
         f();
     }
     fn block_on_all(&mut self) {
-        while let Ok(recieved_token) = self.evt_reciever.recv() {
-            assert_eq!(TEST_TOKEN, recieved_token, "Non matching tokens.");
-            println!("EVENT: {} is ready", recieved_token);
-            self.resume(recieved_token);
+        while let Ok(received_token) = self.evt_receiver.recv() {
+            assert_eq!(TEST_TOKEN, received_token, "Non matching tokens.");
+            println!("EVENT: {} is ready", received_token);
+            self.resume(received_token);
         }
     }
 }

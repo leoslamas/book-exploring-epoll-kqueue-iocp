@@ -49,7 +49,7 @@ Another advantage of this is when we have multiple threads waiting on the same e
 There are similar flags we can pass to `kqueue`even though it's not named the same there, but the same considerations is valid there as well.
 
 {% hint style="info" %}
-We circumvented this by using `EPOLLONESHOT.` Using this actually removes the resource from the event queue alltoghether, and since we made our `socket`blocking on recieving the first event we knew that we would only block if for some reason we recieved an `EAGAIN` error on the socket.
+We circumvented this by using `EPOLLONESHOT.` Using this actually removes the resource from the event queue alltoghether, and since we made our `socket`blocking on receiving the first event we knew that we would only block if for some reason we received an `EAGAIN` error on the socket.
 
 The proper thing to do here is to read until we get a "loss of readiness" \(if we get that at all\) and suspend the task and wait for another `Ready` event. When using `edge triggered`mode the socket will notify us when it changes state to `Ready`again and we can resume.
 {% endhint %}

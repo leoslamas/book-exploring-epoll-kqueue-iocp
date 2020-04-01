@@ -108,12 +108,12 @@ pub fn create_io_completion_port(
 
 ### WSARecv
 
-This method will register an interest in a `data recieved`event. Together with the [WSASend](https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend) method this lets us wait for completed `Read`and `Write`operations. This will be the method we call to indicate to the operating system that we're interested to get a notification when the `Recieve`event has finished on our `Socket`. We call this from our `Registrator`.
+This method will register an interest in a `data received`event. Together with the [WSASend](https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend) method this lets us wait for completed `Read`and `Write`operations. This will be the method we call to indicate to the operating system that we're interested to get a notification when the `Receive`event has finished on our `Socket`. We call this from our `Registrator`.
 
 Windows, calls an operation we can await in an event queue an `Overlapped Operation`. Knowing this is handy when it comes to understanding the names of data structures and functions on Windows.
 
 {% hint style="warning" %}
-This function can return `0`, which means no error occurred and that the `Recieve`operation completed immediately. **This is however not what we expect this function to return!** 
+This function can return `0`, which means no error occurred and that the `Receive`operation completed immediately. **This is however not what we expect this function to return!** 
 
 So you thought the `Success`case was what we're expecting, yes? In this specific case we expect failure! 
 
@@ -131,7 +131,7 @@ By the way, you need to call the function `WSAGetLastError`to get the error code
 ```rust
 /// Creates a socket read event.
 /// ## Returns
-/// The number of bytes recieved
+/// The number of bytes received
 pub fn wsa_recv(
     s: RawSocket,
     wsabuffers: &mut [WSABUF],
