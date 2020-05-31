@@ -184,7 +184,7 @@ mod ffi {
     pub const EV_ENABLE: u16 = 0x4;
     pub const EV_ONESHOT: u16 = 0x10;
     pub const EV_CLEAR: u16 = 0x20;
-    
+
     // To be able to pass in a timeout to `Kqueue`we need to use 
     // a timespec struct to pass in the information
     #[derive(Debug)]

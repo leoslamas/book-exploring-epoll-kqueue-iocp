@@ -6,25 +6,25 @@ description: Well if any of this classify as "easy" at all...
 
 The funny thing about the exercise in this book is that a lot of the work is setting up the infrastructure to get a running event loop in the first place. Actually adding new functionality is much easier, but to keep this example as short as I can we skip many important things to actually implement a fully working event queue. I'll point some of the ones I consider the most important here.
 
-### Everything in networking is asynchronous
+## Everything in networking is asynchronous
 
-In our example we only treat `Read`events on a socket. In reality, both the opening of a socket, resolving the DNS and writing data to a socket are all blocking tasks. 
+In our example we only treat `Read`events on a socket. In reality, both the opening of a socket, resolving the DNS and writing data to a socket are all blocking tasks.
 
 This actually means that we'll run into trouble using the standard library `std::net::TcpStream`as the real workhorse behind our own `TcpStream`since there is no way to open a socket without resolving the DNS using a blocking call. In reality, we need to build our own `TcpStream`from scratch if we want it to be truly asynchronous.
 
-### Communication could be interrupted
+## Communication could be interrupted
 
 We're not accounting for the fact that communication could be interrupted. In such a case the right thing to do would be to suspend the task again and register interest for further events on that resource with our event queue.
 
-### Buffers could be full while there is more data to read
+## Buffers could be full while there is more data to read
 
 This is particularly a problem we have with our `IOCP`implementation. We only submit one fixed buffer and does not even consider the possibility that we might receive more data than would fit in it. Neither do we consider how we would optimally arrange these buffers to avoid allocating more memory than we need and make sure performance does not suffer.
 
-The right thing to do here is to decide on a buffering strategy, and this can be a complicated topic itself. However, getting a working and correct solution is not that much work, but if you want to win be the fastest `I/O`library in the world, there is a lot to consider. 
+The right thing to do here is to decide on a buffering strategy, and this can be a complicated topic itself. However, getting a working and correct solution is not that much work, but if you want to win be the fastest `I/O`library in the world, there is a lot to consider.
 
 We should check if we have read all the data or not and resubmit interest to our queue for more data if needed.
 
-### Resolving DNS
+## Resolving DNS
 
 As mentioned in the first paragraph of this chapter, almost everything is blocking at some level. DNS lookup is one of those things where we have to decide on a strategy. The optimal strategy for this might depend on our exact use case.
 
@@ -34,7 +34,7 @@ If most of our DNS lookups are not cached locally, this will be a bad strategy. 
 
 There is also the case of what APIs and methods are available for evented DNS lookup. Most experiences I've read seems to suggest that these APIs are pretty unergonomic to use and that it's difficult to justify that added complexity with the gains it would have \(if any at all\).
 
-### Level triggered vs Edge triggered events
+## Level triggered vs Edge triggered events
 
 So this is actually hides some pretty important complexity we skipped for the `readiness`based models. The default mode for `epoll`is `level triggered`. This means that if we don't immediately start reading from the socket, it will keep "nagging" us and trigger notifications that it's ready to be read.
 
@@ -54,7 +54,7 @@ We circumvented this by using `EPOLLONESHOT.` Using this actually removes the re
 The proper thing to do here is to read until we get a "loss of readiness" \(if we get that at all\) and suspend the task and wait for another `Ready` event. When using `edge triggered`mode the socket will notify us when it changes state to `Ready`again and we can resume.
 {% endhint %}
 
-### Thread Safety and Race Conditions
+## Thread Safety and Race Conditions
 
 Our implementation is pretty brittle in some aspects. Our main focus has been how Kqueue, Epoll and IOCP work, and not how to make a perfect event loop library.
 
@@ -62,7 +62,7 @@ In our `Registrator::register()`method we first check if the `Poll`instance is d
 
 _What happens if another thread closes the loop before we hit line 22 in the code below?_
 
-We'll nothing too dramatic, but our event will never return to us and if we're counting on that we might end up blocking for ever somewhere. 
+We'll nothing too dramatic, but our event will never return to us and if we're counting on that we might end up blocking for ever somewhere.
 
 **How can we solve this?**
 
@@ -89,7 +89,7 @@ pub fn register(
     interests: Interests,
 ) -> io::Result<()> {
     // SPIN WHILE TRYING TO ACQUIRE A "REGISTRATION LOCK"
-    
+
     // THEN check if poll is dead
     if self.is_poll_dead.load(Ordering::SeqCst) {
         return Err(io::Error::new(
@@ -109,11 +109,9 @@ pub fn register(
     } else {
         unimplemented!();
     }
-    
+
     // RELEASE THE "REGISTRATION LOCK"
     Ok(())
 }
 ```
-
-
 

@@ -10,7 +10,7 @@ mod ffi {
     extern "C" {
         /// Returns: positive: file descriptor, negative: error
         pub(super) fn kqueue() -> i32;
-        
+
         pub(super) fn kevent(
             kq: i32,
             changelist: *const Kevent,
@@ -263,7 +263,7 @@ mod ffi {
     extern "C" {
         /// Returns: positive: file descriptor, negative: error
         pub(super) fn kqueue() -> i32;
-        
+
         pub(super) fn kevent(
             kq: i32,
             changelist: *const Kevent,
@@ -280,9 +280,9 @@ mod ffi {
 
 I've chosen to comment everything in the code so if you paste this into your own program you'll still have all information you need.
 
-There are however something I want to point out specifically. The call to `kevent`behaves differently from the calls we see in `epoll`in that it does different things based on what arguments are passed in. 
+There are however something I want to point out specifically. The call to `kevent`behaves differently from the calls we see in `epoll`in that it does different things based on what arguments are passed in.
 
-A simplified way of thinking of this is that it has two modes. One is `register`mode, where we pass in a set of changes we want to make to our queue in the `changelist`field. 
+A simplified way of thinking of this is that it has two modes. One is `register`mode, where we pass in a set of changes we want to make to our queue in the `changelist`field.
 
 The other is the `wait`mode where it will request the OS to suspend the thread it's called from and wake it up when some event\(s\) has happened. In this call we pass in an array of zeroed `Kevent`structs which the OS will fill with data about what has occurred while the thread was suspended.
 

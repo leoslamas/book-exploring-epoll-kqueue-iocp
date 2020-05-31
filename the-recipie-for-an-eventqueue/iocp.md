@@ -113,9 +113,9 @@ This method will register an interest in a `data received`event. Together with t
 Windows, calls an operation we can await in an event queue an `Overlapped Operation`. Knowing this is handy when it comes to understanding the names of data structures and functions on Windows.
 
 {% hint style="warning" %}
-This function can return `0`, which means no error occurred and that the `Receive`operation completed immediately. **This is however not what we expect this function to return!** 
+This function can return `0`, which means no error occurred and that the `Receive`operation completed immediately. **This is however not what we expect this function to return!**
 
-So you thought the `Success`case was what we're expecting, yes? In this specific case we expect failure! 
+So you thought the `Success`case was what we're expecting, yes? In this specific case we expect failure!
 
 In we get a result indicating success there is nothing for us to await and we should handle the case when data is already there \(we'll not cover this case in our implementation though\).
 
@@ -168,9 +168,9 @@ pub fn wsa_recv(
 ```
 
 {% hint style="success" %}
-**The safe wrapper deserves some commenting. Do you see the cast `operation_ptr as *mut WSAOVERLAPPED`?** 
+**The safe wrapper deserves some commenting. Do you see the cast `operation_ptr as *mut WSAOVERLAPPED`?**
 
-This is explained below, but it's a way for us to actually identify what event occurred. The way we do this is by wrapping `WSAOVERLAPPED`in an `Operation`struct. 
+This is explained below, but it's a way for us to actually identify what event occurred. The way we do this is by wrapping `WSAOVERLAPPED`in an `Operation`struct.
 
 If we make sure that the `Operation`structs memory layout conforms with what the API expects we can attach additional context with the event by casting it to a `WSAOVERLAPPED`pointer and then later on dereference it back to an `Operation`struct and retrieve any additional information we attached identifying the event that occurred. It's complicated, but I'll explain more as we go along.
 
@@ -199,7 +199,7 @@ pub fn post_queued_completion_status(
             overlapped_ptr,
         )
     };
-    
+
     if res == 0 {
         Err(std::io::Error::last_os_error().into())
     } else {
@@ -247,7 +247,7 @@ pub fn get_queued_completion_status_ex(
 
     let mut ul_num_entries_removed: u32 = 0;
     let timeout = timeout.unwrap_or(INFINITE);
-    
+
     let res = unsafe {
         GetQueuedCompletionStatusEx(
             completion_port,
@@ -441,7 +441,7 @@ pub type Event = ffi::OVERLAPPED_ENTRY;
 The `TcpStream`is where we abstract over the many differences between `IOCP`and `kqueue/epoll`. On Windows we need to lend a buffer \(or array of buffers to be precise\) to the OS which it will use to read the data into.
 
 {% hint style="warning" %}
-Since `CompletionKey`is assigned on a _per resource basis_ there is no easy way for us to get information about what exact event occurred. 
+Since `CompletionKey`is assigned on a _per resource basis_ there is no easy way for us to get information about what exact event occurred.
 
 We solve this by providing a struct which has t**he same memory layout** as `WSAOVERLAPPED`which is passed into the syscall that registers an event. If you look at the definition of the `ffi::Operation`struct it has a `#[repr(C)]`directive and the first field is a `ffi::WSAOVERLAPPED`struct. This means that if we cast this to a `*mut WSAOVERLAPPED`and pass it to the Windows API it will only touch this field of our `Operation`struct.
 
@@ -553,7 +553,7 @@ The `registrator` needs to be "linked" to our completion port, and should be abl
 
 We use an `Arc<AtomicBool>`to check if the `Poll`instance is alive or not. The "link" to the completion port is simply the completion port handle.
 
-`Registrator` has two public methods: `register`and `close_loop`. 
+`Registrator` has two public methods: `register`and `close_loop`.
 
 `register` is interesting. It takes a `TcpStream`\(not the `std::net`one though\), a token and a bitflag indicating what interests we're interested in.
 
@@ -563,7 +563,7 @@ Now, the first thing we do is to check if the `Poll`instance is dead.
 Warning! Remember that the `Registrator`is meant to just be used on **one** different thread from the one that our `Poll`instance is running on. Read the [relevant paragraph in the Appendix chapter "It's not that easy"](its-not-that-easy.md#thread-safety-and-race-conditions) for more information about this and potential ways to solve this limitation.
 {% endhint %}
 
-The next thing we do is to associate the "resource", in this case a `socket`with our `IOCP`instance. 
+The next thing we do is to associate the "resource", in this case a `socket`with our `IOCP`instance.
 
 {% hint style="info" %}
 This might seem strange but `create_io_completion_port`behaves diffrently based on the parameters we pass in. If we pass in both a valid `handle`and a valid `completion_port`we have now associated this `handle`with this `completion_port`. If we choose to pass in a`CompletionKey`it is also associated with this `handle`. We only pass in `0`here since we don't use the `CompletionKey`.
@@ -631,9 +631,9 @@ impl Registrator {
 ```
 
 {% hint style="danger" %}
-We require a `&mut TcpStram` here, but we only need it for Windows. 
+We require a `&mut TcpStram` here, but we only need it for Windows.
 
-Now there are ways to deal with this so we don't require an API which needs `&mut TcpStream`, on the platforms where we don't pass in a buffer to the OS, but either way the reality is that we mutate data owned by our `TcpSocket`on Windows. 
+Now there are ways to deal with this so we don't require an API which needs `&mut TcpStream`, on the platforms where we don't pass in a buffer to the OS, but either way the reality is that we mutate data owned by our `TcpSocket`on Windows.
 
 If we implement this as part of a Runtime which we control there are ways for/ us to guarantee that the buffer is not touched or moved, so we could mutate it safely, but this is not a Runtime so we can't know that.
 {% endhint %}
@@ -737,7 +737,7 @@ impl Drop for Selector {
 
 ### Conclusion
 
-If you got all the way here to the conclusion by reading all this code, I'm impressed. Good job! 
+If you got all the way here to the conclusion by reading all this code, I'm impressed. Good job!
 
 `IOCP`supports a [variety of resources](https://docs.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports#supported-io-functions) which can be used in a similar way to what we show here. Just remember to read the [It's not that easy](its-not-that-easy.md) chapter to get some overview of the shortcuts and scenarios we haven't covered here.
 
@@ -745,11 +745,7 @@ If you haven't cloned the repo yet or want to have a look at the complete code p
 
 I'll leave you with a link to the full code presented here:
 
-{% embed url="https://github.com/cfsamson/examples-minimio/blob/master/src/windows.rs" %}
-
-
-
-
+{% embed url="https://github.com/cfsamson/examples-minimio/blob/master/src/windows.rs" caption="" %}
 
 \`\`
 

@@ -275,6 +275,5 @@ fn eventfd(initva: u32, flags: i32) -> io::Result<i32> {
         Ok(res)
     }
 }
-
 ```
 

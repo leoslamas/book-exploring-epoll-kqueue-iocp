@@ -22,7 +22,7 @@ Later in another book we might use this exact code to explore how higher level c
 **This book is developed in the open and there are some resources I'll point you at right away:**
 
 \*\*\*\*[**The repository for this Gitbook:**](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp)  
-****The repository contains the text of this book. Use the [Issue Tracker ](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues)if you have questions or feedback of any kind. If you spot any mistaks, want to suggest changes or otherwise contribute to this book please make a [Pull Request](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/pulls).
+****The repository contains the text of this book. Use the [Issue Tracker ](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/issues)if you have questions or feedback of any kind. If you spot any mistakes, want to suggest changes or otherwise contribute to this book please make a [Pull Request](https://github.com/cfsamson/book-exploring-epoll-kqueue-iocp/pulls).
 
 [**The example code for Part 2 of this book - the minimio library:**](https://github.com/cfsamson/examples-minimio)  
 I suggest that you clone or fork the repository and explore, change and improve the example yourslf. 

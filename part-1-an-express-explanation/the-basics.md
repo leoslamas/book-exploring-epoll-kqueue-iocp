@@ -64,7 +64,7 @@ Getting data from a C Union is always unsafe since we have no way of knowing tha
 
 Honestly, we could just use a plain `u64`here. A `C`union will write its data from the first byte anyway so the memory layout of a `Data.uint64`and a `u64`will be the same.
 
-It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use an`usize` that should work. 
+It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use an`usize` that should work.
 
 Let's avoid using a `union`here and change our `ffi`module to look like this:
 
@@ -254,7 +254,7 @@ RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
 FINISHED
 ```
 
-**Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely? 
+**Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely?
 
 Oh, so you trusted the manpage for Linux, did you? Yeah, me too. It turns out it's written for users of the C library and not with people using `ffi`in mind. A valuable lesson to keep in mind. In this case that causes a big problem for us.
 

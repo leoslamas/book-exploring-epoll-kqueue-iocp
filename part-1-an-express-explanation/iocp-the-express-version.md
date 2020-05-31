@@ -325,7 +325,7 @@ fn main() {
 mod ffi {
     use std::os::windows::io::RawSocket;
     use std::ptr;
-    
+
     // ===== CONSTANTS =====
     pub type HANDLE = isize;
     pub type BOOL = bool;
@@ -351,7 +351,7 @@ mod ffi {
     // Interpreted as an i32 the value is -1
     // see for yourself: https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=4b93de7d7eb43fa9cd7f5b60933d8935
     pub const INFINITE: u32 = 0xFFFFFFFF;
-    
+
     // ====== STRUCTURES =====
     #[repr(C)]
     #[derive(Clone, Debug)]
@@ -407,7 +407,7 @@ mod ffi {
             }
         }
     }
-    
+
     // ===== BINDINGS =====
     #[link(name = "Kernel32")]
     extern "stdcall" {
@@ -441,10 +441,9 @@ mod ffi {
 
         pub fn WSAGetLastError() -> i32;
     }
-
 ```
 
-Some things to make a note of. The `CreateIoCompletionPort`syscall does different things based on the parameters passed in. The first time we call it, we create a new `CompletionPort`. The second time we call it we associate our resource \(in this case our `Socket`\) with the completion port we created. 
+Some things to make a note of. The `CreateIoCompletionPort`syscall does different things based on the parameters passed in. The first time we call it, we create a new `CompletionPort`. The second time we call it we associate our resource \(in this case our `Socket`\) with the completion port we created.
 
 {% hint style="info" %}
 See the [relevant paragraph in the CreateIoCompletionPort documentation](https://docs.microsoft.com/en-us/windows/win32/fileio/createiocompletionport#remarks) for more information about the modes it can be used in.
@@ -464,7 +463,7 @@ Now, to do that we take advantage of the fact that when we create a structure wi
 
 This means that if we cast this struct \(called an `Operation`in our example\) as a pointer to a `WSAOVERLAPPED`struct, the OS will only touch the bytes as if it was a normal pointer to a `WSAOVERLAPPED`structure.
 
-When we retrieve the pointer to this structure when the event has occurred we can cast it back to a `Operation`struct and access the extra context about the event. In our case it's just a number to identify the event. 
+When we retrieve the pointer to this structure when the event has occurred we can cast it back to a `Operation`struct and access the extra context about the event. In our case it's just a number to identify the event.
 
 {% hint style="info" %}
 When calling `GetQueuedCompletionStatusEx`a pointer to the `WSAOVERLAPPED`structure we passed in when registering interest in `WSARecv`is available in the `lpoverlapped`field of the `OVERLAPPED_ENTRY`structure we get for each finished event.
@@ -481,7 +480,7 @@ RECEIVED: 1
 FINISHED
 ```
 
-Unlike the `epoll`printout I didn't include the debug print of the `Operation`struct since it's too much data to show here, but if you change line 161 to `println!("RECEIVED: {:?}", operation);`you'll see all the data we get returned. 
+Unlike the `epoll`printout I didn't include the debug print of the `Operation`struct since it's too much data to show here, but if you change line 161 to `println!("RECEIVED: {:?}", operation);`you'll see all the data we get returned.
 
 Often the `context`field will be a callback you want to run once the event has competed.
 
