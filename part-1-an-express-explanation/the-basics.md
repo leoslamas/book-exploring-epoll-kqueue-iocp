@@ -30,7 +30,7 @@ However, we don't have everything set up yet. The syscalls expects us to pass in
 
 We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we see that we need two more definitions:
 
-![Click to enlarge](../.gitbook/assets/bilde%20%2810%29.png)
+![Click to enlarge](../.gitbook/assets/bilde%20%282%29%20%281%29.png)
 
 Namely an `Event` struct and a `Data`union:
 
@@ -64,7 +64,7 @@ Getting data from a C Union is always unsafe since we have no way of knowing tha
 
 Honestly, we could just use a plain `u64`here. A `C`union will write its data from the first byte anyway so the memory layout of a `Data.uint64`and a `u64`will be the same.
 
-It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use an`usize` that should work.
+It's actually better for us to just pass in a concrete type since we decide what data we want to store with the `Event`object anyway. Since the `union`defined both `u32`and `u64`as valid data, we can just use an`usize` that should work. 
 
 Let's avoid using a `union`here and change our `ffi`module to look like this:
 
@@ -103,7 +103,7 @@ fn main() {
     let queue = unsafe { ffi::epoll_create(1) };
     // This is how we basically check for errors and handle them using most 
     // C APIs
-    // We handle them by just panicking here in our example.
+    // We handle them by just panicing here in our example.
     if queue < 0 {
         panic!(io::Error::last_os_error());
     }
@@ -112,14 +112,14 @@ fn main() {
     // not closed
     let mut streams = vec![];
 
-    // We create 5 requests to an endpoint we control the delay on
+    // We crate 5 requests to an an endpoint we control the delay on
     for i in 1..6 {
         // This site has an api to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
         let mut stream = TcpStream::connect(addr).unwrap();
 
         // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in decending order so we sould receive 
+        // We'll create delays in decending order so we sould recieve 
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -147,7 +147,7 @@ fn main() {
         //
         // `epoll_data` is user provided data, so we can put a pointer or 
         // an integer value there to identify the event. We just use 
-        // `i` which is the loop count to identify the events.
+        // `i` which is the loop count to indentify the events.
         let mut event = ffi::Event {
             events: (ffi::EPOLLIN | ffi::EPOLLONESHOT) as u32,
             epoll_data: i,
@@ -175,14 +175,14 @@ fn main() {
     // Now we wait for events
     while event_counter > 0 {
 
-        // The API expects us to pass in an array of `Event` structs. 
+        // The API expects us to pass in an arary of `Event` structs. 
         // This is how the OS communicates back to us what has happened.
         let mut events = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. The timeout 
         // of `-1` means no timeout so we'll block until something happens. 
         // Now the OS suspends our thread doing a context switch and work 
-        // on something else - or just preserve power.
+        // on someting else - or just perserve power.
         let res = unsafe { ffi::epoll_wait(queue, events.as_mut_ptr(), 10, -1) };
         // This result will return the number of events which occurred 
         // (if any) or a negative number if it's an error.
@@ -196,7 +196,7 @@ fn main() {
         unsafe { events.set_len(res as usize) };
 
         for event in events {
-            println!("RECEIVED: {:?}", event);
+            println!("RECIEVED: {:?}", event);
             event_counter -= 1;
         }
     }
@@ -246,15 +246,15 @@ Good job! We have actually created our own epoll-backed event queue which notifi
 If we run the code we get:
 
 ```text
-RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
-RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
-RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
-RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
-RECEIVED: Event { events: 1, epoll_data: 140587164499969 }
+RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
+RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
+RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
+RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
+RECIEVED: Event { events: 1, epoll_data: 140587164499969 }
 FINISHED
 ```
 
-**Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely?
+**Wait! What?** Our `epoll_data`is not 5, 4, 3, 2, 1 as expected but something else entirely? 
 
 Oh, so you trusted the manpage for Linux, did you? Yeah, me too. It turns out it's written for users of the C library and not with people using `ffi`in mind. A valuable lesson to keep in mind. In this case that causes a big problem for us.
 
@@ -287,11 +287,11 @@ Notice the `#[repr(C, packed)]`attribute? This tells the Rust compiler to treat 
 **Running our example again gives us what we expected:**
 
 ```text
-RECEIVED: Event { events: 1, epoll_data: 5 }
-RECEIVED: Event { events: 1, epoll_data: 4 }
-RECEIVED: Event { events: 1, epoll_data: 3 }
-RECEIVED: Event { events: 1, epoll_data: 2 }
-RECEIVED: Event { events: 1, epoll_data: 1 }
+RECIEVED: Event { events: 1, epoll_data: 5 }
+RECIEVED: Event { events: 1, epoll_data: 4 }
+RECIEVED: Event { events: 1, epoll_data: 3 }
+RECIEVED: Event { events: 1, epoll_data: 2 }
+RECIEVED: Event { events: 1, epoll_data: 1 }
 FINISHED
 ```
 

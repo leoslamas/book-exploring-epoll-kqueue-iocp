@@ -10,7 +10,7 @@ mod ffi {
     extern "C" {
         /// Returns: positive: file descriptor, negative: error
         pub(super) fn kqueue() -> i32;
-
+        
         pub(super) fn kevent(
             kq: i32,
             changelist: *const Kevent,
@@ -69,7 +69,7 @@ pub struct Kevent {
 
 Here we see the definition of the `Kevent`structure. If we look at the manpage for `kevent`we find some more information about this structure:
 
-![Click to enlarge](../.gitbook/assets/bilde%20%2813%29.png)
+![Click to enlarge](../.gitbook/assets/bilde%20%283%29%20%281%29.png)
 
 You can find more information on the [macos manpage for `kevent`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/kevent.2.html). One thing to note is that the `udata`field can be used to store any user-defined data. The OS leaves this untouched so it doesn't need to be a valid pointer. In our example code we use a regular `usize`to identify each event.
 
@@ -88,7 +88,7 @@ fn main() {
     // First we create the event queue.
     // The size argument is ignored but needs to be larger than 0
     let queue = unsafe { ffi::kqueue() };
-    // We handle errors in this example by just panicking.
+    // We handle errors in this example by just panicing.
     if queue < 0 {
         panic!(io::Error::last_os_error());
     }
@@ -97,14 +97,14 @@ fn main() {
     // not closed
     let mut streams = vec![];
 
-    // We create 5 requests to an endpoint we control the delay on
+    // We crate 5 requests to an an endpoint we control the delay on
     for i in 1..6 {
         // This site has an api to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
         let mut stream = TcpStream::connect(addr).unwrap();
 
         // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in descending order so we should receive 
+        // We'll create delays in decending order so we sould recieve 
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -129,7 +129,7 @@ fn main() {
         // `EV_ADD` indicates that we're adding a new event to the queue. 
         // `EV_ENABLE` means that we want the event returned when triggered
         // `EV_ONESHOT` mans that we want the vent deleted from the queue
-        // on the first occurrence. If we don't do that we need to `deregister` 
+        // on the first occurance. If we don't do that we need to `deregister` 
         // our interest manually when we're done with the socket (which is fine
         // but for this example it's easier to just delete it first time)
         //
@@ -174,21 +174,21 @@ fn main() {
     // Now we wait for events
     while event_counter > 0 {
 
-        // The API expects us to pass in an array of `Kevent` structs. 
+        // The API expects us to pass in an arary of `Kevent` structs. 
         // This is how the OS communicates back to us what has happened.
         let mut events: Vec<ffi::Kevent> = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. Passing in a
-        // null pointer as the timeout waits indefinitely
+        // null pointer as the timeout waits indefinately
         // Now the OS suspends our thread doing a context switch and work 
-        // on something else - or just preserve power.
+        // on someting else - or just perserve power.
         let res = unsafe { 
             ffi::kevent(
                 queue,                    // same kqueue
                 ptr::null(),              // no changes this time
                 0,                        // length of change array is 0
                 events.as_mut_ptr(),      // we expect to get events back
-                events.capacity() as i32, // how many events we can receive
+                events.capacity() as i32, // how many events we can recieve
                 ptr::null(),              // indefinite timeout
             )
         };
@@ -205,7 +205,7 @@ fn main() {
         unsafe { events.set_len(res as usize) };
 
         for event in events {
-            println!("RECEIVED: {}", event.udata);
+            println!("RECIEVED: {}", event.udata);
             event_counter -= 1;
         }
     }
@@ -263,7 +263,7 @@ mod ffi {
     extern "C" {
         /// Returns: positive: file descriptor, negative: error
         pub(super) fn kqueue() -> i32;
-
+        
         pub(super) fn kevent(
             kq: i32,
             changelist: *const Kevent,
@@ -280,9 +280,9 @@ mod ffi {
 
 I've chosen to comment everything in the code so if you paste this into your own program you'll still have all information you need.
 
-There are however something I want to point out specifically. The call to `kevent`behaves differently from the calls we see in `epoll`in that it does different things based on what arguments are passed in.
+There are however something I want to point out specifically. The call to `kevent`behaves differently from the calls we see in `epoll`in that it does different things based on what arguments are passed in. 
 
-A simplified way of thinking of this is that it has two modes. One is `register`mode, where we pass in a set of changes we want to make to our queue in the `changelist`field.
+A simplified way of thinking of this is that it has two modes. One is `register`mode, where we pass in a set of changes we want to make to our queue in the `changelist`field. 
 
 The other is the `wait`mode where it will request the OS to suspend the thread it's called from and wake it up when some event\(s\) has happened. In this call we pass in an array of zeroed `Kevent`structs which the OS will fill with data about what has occurred while the thread was suspended.
 
@@ -293,13 +293,13 @@ The fact that we can make multiple changes to the queue using only a single sysc
 **Running this code on a system running `macos`should give the following result:**
 
 ```text
-RECEIVED: 4
-RECEIVED: 5
-RECEIVED: 3
-RECEIVED: 2
-RECEIVED: 1
+RECIEVED: 4
+RECIEVED: 5
+RECIEVED: 3
+RECIEVED: 2
+RECIEVED: 1
 FINISHED
 ```
 
-If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECEIVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
+If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECIEVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
 
