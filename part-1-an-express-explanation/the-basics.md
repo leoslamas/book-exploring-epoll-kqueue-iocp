@@ -30,7 +30,7 @@ However, we don't have everything set up yet. The syscalls expects us to pass in
 
 We're still writing in the `ffi`block. If we take a look at the manpage for the `epoll_ctl`function we see that we need two more definitions:
 
-![Click to enlarge](../.gitbook/assets/bilde%20%282%29%20%281%29.png)
+![Click to enlarge](../.gitbook/assets/image3.png)
 
 Namely an `Event` struct and a `Data`union:
 
