@@ -222,7 +222,7 @@ In this part of this article, I'll talk about this using a strongly ordered CPU 
 
 This figure should explain where `SeqCst` might fail in upholding it's guarantees:
 
-![https://plv.mpi-sws.org/scfix/paper.pdf](../.gitbook/assets/bilde%20%281%29%20%281%29.png)
+![https://plv.mpi-sws.org/scfix/paper.pdf](../.gitbook/assets/image1.png)
 
 Got it? Good! We'll focus on the practical sides of `SeqCst` and not the theoretical foundations of it from now on.
 
