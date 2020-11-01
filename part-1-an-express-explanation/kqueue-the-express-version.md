@@ -2,7 +2,7 @@
 
 Like in the express epoll example we initialize a cargo project and open `main.rs`.
 
-Kqueue has a rather small API surface with only two syscalls to deal with `kqueue`and one for closing the queue. The API looks like this:
+Kqueue has a rather small API surface with only two syscalls to deal with `kqueue` and one for closing the queue. The API looks like this:
 
 ```rust
 mod ffi {
@@ -10,7 +10,7 @@ mod ffi {
     extern "C" {
         /// Returns: positive: file descriptor, negative: error
         pub(super) fn kqueue() -> i32;
-        
+
         pub(super) fn kevent(
             kq: i32,
             changelist: *const Kevent,
@@ -25,7 +25,7 @@ mod ffi {
 }
 ```
 
-Most of our interactions with our `kqueue`instance happens through the `Kevent`struct. In this struct we pass in information about whether we want to `add`, `modify`or `delete`an interest from our queue. We also specify what kind of events we're interested in. Let's have a look at the other structures and constants in our `ffi`module:
+Most of our interactions with our `kqueue` instance happens through the `Kevent` struct. In this struct we pass in information about whether we want to `add`, `modify` or `delete` an interest from our queue. We also specify what kind of events we're interested in. Let's have a look at the other structures and constants in our `ffi` module:
 
 ```rust
 pub const EVFILT_READ: i16 = -1;
@@ -38,7 +38,7 @@ pub const EV_ONESHOT: u16 = 0x10;
 pub(super) struct Timespec {
     /// Seconds
     tv_sec: isize,
-    /// Nanoseconds     
+    /// Nanoseconds
     v_nsec: usize,
 }
 
@@ -67,11 +67,11 @@ pub struct Kevent {
 }
 ```
 
-Here we see the definition of the `Kevent`structure. If we look at the manpage for `kevent`we find some more information about this structure:
+Here we see the definition of the `Kevent` structure. If we look at the manpage for `kevent` we find some more information about this structure:
 
 ![Click to enlarge](../.gitbook/assets/image2.png)
 
-You can find more information on the [macos manpage for `kevent`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/kevent.2.html). One thing to note is that the `udata`field can be used to store any user-defined data. The OS leaves this untouched so it doesn't need to be a valid pointer. In our example code we use a regular `usize`to identify each event.
+You can find more information on the [macOS manpage for `kevent`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/kevent.2.html). One thing to note is that the `udata` field can be used to store any user-defined data. The OS leaves this untouched so it doesn't need to be a valid pointer. In our example code we use a regular `usize` to identify each event.
 
 Let's put this all together and see how these syscalls are used:
 
@@ -88,23 +88,23 @@ fn main() {
     // First we create the event queue.
     // The size argument is ignored but needs to be larger than 0
     let queue = unsafe { ffi::kqueue() };
-    // We handle errors in this example by just panicing.
+    // We handle errors in this example by just panicking.
     if queue < 0 {
         panic!(io::Error::last_os_error());
     }
 
-    // As you'll see below, we need a place to store the streams so they're 
+    // As you'll see below, we need a place to store the streams so they're
     // not closed
     let mut streams = vec![];
 
-    // We crate 5 requests to an an endpoint we control the delay on
+    // We crate 5 requests to an endpoint we control the delay on
     for i in 1..6 {
-        // This site has an api to simulate slow responses from a server
+        // This site has an API to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
         let mut stream = TcpStream::connect(addr).unwrap();
 
-        // The delay is passed in to the GET request as milliseconds. 
-        // We'll create delays in decending order so we sould recieve 
+        // The delay is passed in to the GET request as milliseconds.
+        // We'll create delays in descending order so we should receive
         // them as `5, 4, 3, 2, 1`
         let delay = (5 - i) * 1000;
         let request = format!(
@@ -116,20 +116,20 @@ fn main() {
         );
         stream.write_all(request.as_bytes()).unwrap();
 
-        // make this socket non-blocking. Well, not really needed since 
+        // make this socket non-blocking. Well, not really needed since
         // we're not using it in this example...
         stream.set_nonblocking(true).unwrap();
 
-        // Then register interest in getting notified for `Read` events on 
-        // this socket. The `Kevent` struct is where we specify what events 
-        // we want to register interest in and other configurations using 
-        // flags. 
+        // Then register interest in getting notified for `Read` events on
+        // this socket. The `Kevent` struct is where we specify what events
+        // we want to register interest in and other configurations using
+        // flags.
         //
         // `EVFILT_READ` indicates that this is a `Read` interest
-        // `EV_ADD` indicates that we're adding a new event to the queue. 
+        // `EV_ADD` indicates that we're adding a new event to the queue.
         // `EV_ENABLE` means that we want the event returned when triggered
         // `EV_ONESHOT` mans that we want the vent deleted from the queue
-        // on the first occurance. If we don't do that we need to `deregister` 
+        // on the first occurrence. If we don't do that we need to `deregister`
         // our interest manually when we're done with the socket (which is fine
         // but for this example it's easier to just delete it first time)
         //
@@ -147,14 +147,14 @@ fn main() {
 
         let changelist = [event];
 
-        // This is the call where we actually register an interest with our 
-        // queue. The call to `kevent` behaves differently based on the 
-        // parameters passed in. Passing in a null pointer as the timeout 
+        // This is the call where we actually register an interest with our
+        // queue. The call to `kevent` behaves differently based on the
+        // parameters passed in. Passing in a null pointer as the timeout
         // specifies an infinite timeout
         let res = unsafe {ffi::kevent(
             queue,               // the kqueue handle
             changelist.as_ptr(), // changes to the queue
-            1,                   // length of changelist 
+            1,                   // length of changelist
             ptr::null_mut(),     // event list (if we expect any returned)
             0,                   // len of event list (if we expect any)
             ptr::null()          // timeout (if any)
@@ -164,8 +164,8 @@ fn main() {
             panic!(io::Error::last_os_error());
         }
 
-        // Letting `stream` go out of scope in Rust automatically runs 
-        // its destructor which closes the socket. We prevent that by 
+        // Letting `stream` go out of scope in Rust automatically runs
+        // its destructor which closes the socket. We prevent that by
         // holding on to it until we're finished
         streams.push(stream);
         event_counter += 1;
@@ -174,44 +174,44 @@ fn main() {
     // Now we wait for events
     while event_counter > 0 {
 
-        // The API expects us to pass in an arary of `Kevent` structs. 
+        // The API expects us to pass in an array of `Kevent` structs.
         // This is how the OS communicates back to us what has happened.
         let mut events: Vec<ffi::Kevent> = Vec::with_capacity(10);
 
         // This call will actually block until an event occurs. Passing in a
-        // null pointer as the timeout waits indefinately
-        // Now the OS suspends our thread doing a context switch and work 
-        // on someting else - or just perserve power.
-        let res = unsafe { 
+        // null pointer as the timeout waits indefinitely
+        // Now the OS suspends our thread doing a context switch and works
+        // on something else - or just preserves power.
+        let res = unsafe {
             ffi::kevent(
                 queue,                    // same kqueue
                 ptr::null(),              // no changes this time
                 0,                        // length of change array is 0
                 events.as_mut_ptr(),      // we expect to get events back
-                events.capacity() as i32, // how many events we can recieve
+                events.capacity() as i32, // how many events we can receive
                 ptr::null(),              // indefinite timeout
             )
         };
 
-        // This result will return the number of events which occurred 
+        // This result will return the number of events which occurred
         // (if any) or a negative number if it's an error.
         if res < 0 {
             panic!(io::Error::last_os_error());
         };
 
-        // This one unsafe we could avoid though but this technique is used 
-        // in libraries like `mio` and is safe as long as the OS does 
+        // This one unsafe we could avoid though but this technique is used
+        // in libraries like `mio` and is safe as long as the OS does
         // what it's supposed to.
         unsafe { events.set_len(res as usize) };
 
         for event in events {
-            println!("RECIEVED: {}", event.udata);
+            println!("RECEIVED: {}", event.udata);
             event_counter -= 1;
         }
     }
 
-    // When we manually initialize resources we need to manually clean up 
-    // after our selves as well. Normally, in Rust, there will be a `Drop` 
+    // When we manually initialize resources we need to manually clean up
+    // after our selves as well. Normally, in Rust, there will be a `Drop`
     // implementation which takes care of this for us.
     let res = unsafe { ffi::close(queue) };
     if res < 0 {
@@ -231,7 +231,7 @@ mod ffi {
     pub(super) struct Timespec {
         /// Seconds
         tv_sec: isize,
-        /// Nanoseconds     
+        /// Nanoseconds
         v_nsec: usize,
     }
 
@@ -263,7 +263,7 @@ mod ffi {
     extern "C" {
         /// Returns: positive: file descriptor, negative: error
         pub(super) fn kqueue() -> i32;
-        
+
         pub(super) fn kevent(
             kq: i32,
             changelist: *const Kevent,
@@ -280,17 +280,17 @@ mod ffi {
 
 I've chosen to comment everything in the code so if you paste this into your own program you'll still have all information you need.
 
-There are however something I want to point out specifically. The call to `kevent`behaves differently from the calls we see in `epoll`in that it does different things based on what arguments are passed in. 
+There is however something I want to point out specifically. The call to `kevent` behaves differently from the calls we see in `epoll` in that it does different things based on what arguments are passed in.
 
-A simplified way of thinking of this is that it has two modes. One is `register`mode, where we pass in a set of changes we want to make to our queue in the `changelist`field. 
+A simplified way of thinking of this is that it has two modes. One is `register` mode, where we pass in a set of changes we want to make to our queue in the `changelist` field.
 
-The other is the `wait`mode where it will request the OS to suspend the thread it's called from and wake it up when some event\(s\) has happened. In this call we pass in an array of zeroed `Kevent`structs which the OS will fill with data about what has occurred while the thread was suspended.
+The other is the `wait` mode where it will request the OS to suspend the thread it's called from and wake it up when some event\(s\) happened. In this call we pass in an array of zeroed `Kevent` structs which the OS will fill with data about what has occurred while the thread was suspended.
 
 {% hint style="info" %}
-The fact that we can make multiple changes to the queue using only a single syscall can be an advantage in situations where you have many I/O operations and many calls. A syscall is not cheap and minimizing them can have a noticable effect on performance.
+The fact that we can make multiple changes to the queue using only a single syscall can be an advantage in situations where you have many I/O operations and many calls. A syscall is not cheap and minimizing them can have a noticeable effect on performance.
 {% endhint %}
 
-**Running this code on a system running `macos`should give the following result:**
+**Running this code on a system running `macos` should give the following result:**
 
 ```text
 RECIEVED: 4
@@ -301,5 +301,5 @@ RECIEVED: 1
 FINISHED
 ```
 
-If you want to see what the `Kevent`structure we get in return looks like, change line 130 to `println!("RECIEVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
+If you want to see what the `Kevent` structure we get in return looks like, change line 130 to `println!("RECIEVED: {:?}", event);`, and you'll notice that the OS has filled in the field with data about the event which occurred.
 
