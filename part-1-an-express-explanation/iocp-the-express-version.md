@@ -1,12 +1,12 @@
 # IOCP - the express version
 
-Now on Windows we use `IOCP`which is a _completion_ based model. As you'll see we need to adapt our code a bit to actually account for this.
+Now on Windows we use `IOCP` which is a _completion_ based model. As you'll see we need to adapt our code a bit to actually account for this.
 
-As you'll also see, `IOCP`on Windows requires far more code than `kqueue`or `epoll`in addition to the fact that Windows uses a lot more structs to pass data back and forth between API boundaries which does add a lot of boilerplate code.
+As you'll also see, `IOCP`on Windows requires far more code than `kqueue` or `epoll` in addition to the fact that Windows uses a lot more structs to pass data back and forth between API boundaries which does add a lot of boilerplate code.
 
 Let's dive in and first have a look at the syscalls we'll have to work with:
 
-Create a new rust `bin` project \(not a library\). In `main.rs`remove what's there and add our `ffi`module.
+Create a new rust `bin` project \(not a library\). In `main.rs` remove what's there and add our `ffi` module.
 
 ```rust
 mod ffi {
@@ -44,9 +44,9 @@ mod ffi {
     }
 ```
 
-The API surface for `IOCP`is quite a bit larger. In addition, we only bind to the syscall to `WSARecv`to register interest for Read events on a socket. If we want to register other events we'll have to bind to the relevant syscalls for them as well.
+The API surface for `IOCP` is quite a bit larger. In addition, we only bind to the syscall to `WSARecv` to register interest for Read events on a socket. If we want to register other events we'll have to bind to the relevant syscalls for them as well.
 
-Now, Windows uses a lot more structs which we need to use to communicate with the OS. Let's look at the rest of our `ffi`module:
+Now, Windows uses a lot more structs which we need to use to communicate with the OS. Let's look at the rest of our `ffi` module:
 
 ```rust
     use std::os::windows::io::RawSocket;
@@ -138,7 +138,7 @@ Now, Windows uses a lot more structs which we need to use to communicate with th
 
 It's quite a bit of code just to create a minimal example. The code itself however is not that complicated yet. The difficult part is actually defining all the different types and convert them to Rust types. This is the huge advantage of using the [winapi crate](https://docs.rs/winapi/0.3.8/winapi/index.html) where all constants and bindings are provided for us instead of us having to search them up and define them like we do with [INVALID\_HANDLE\_VALUE](https://docs.rs/winapi/0.3.8/src/winapi/um/handleapi.rs.html#9). The alternative is to find this information yourself checking different header files.
 
-One thing to note is that you'll often see reference to `OVERLAPPED`structure in the documentation. The structure `WSAOVERLAPPED`is designed to have the same memory layout as `OVERLAPPED`so we can use this instead to save some lines of code.
+One thing to note is that you'll often see reference to `OVERLAPPED` structure in the documentation. The structure `WSAOVERLAPPED` is designed to have the same memory layout as `OVERLAPPED` so we can use this instead to save some lines of code.
 
 Now, let's take a look at the example. I've commented it extensively to explain along the way.
 
@@ -184,7 +184,7 @@ fn main() {
 
     // We create 5 requests to an endpoint we control the delay on
     for i in 1..6 {
-        // This site has an api to simulate slow responses from a server
+        // This site has an API to simulate slow responses from a server
         let addr = "slowwly.robertomurray.co.uk:80";
         let mut stream = TcpStream::connect(addr).unwrap();
 
@@ -202,10 +202,10 @@ fn main() {
 
         // we need to register this resource with the completion port
         let res = unsafe { ffi::CreateIoCompletionPort(
-            stream.as_raw_socket() as isize, 
-            queue, 
+            stream.as_raw_socket() as isize,
+            queue,
             ptr::null_mut(),
-            0) 
+            0)
         };
 
         if (res as *mut usize).is_null() {
@@ -281,8 +281,8 @@ fn main() {
 
         // This call will actually block until an event occurs. The timeout
         // of `-1` means no timeout so we'll block until something happens.
-        // Now the OS suspends our thread doing a context switch and work
-        // on something else - or just preserve power.
+        // Now the OS suspends our thread doing a context switch and works
+        // on something else - or just preserves power.
 
         let mut entries_removed: u32 = 0;
         let res = unsafe {
@@ -443,30 +443,30 @@ mod ffi {
     }
 ```
 
-Some things to make a note of. The `CreateIoCompletionPort`syscall does different things based on the parameters passed in. The first time we call it, we create a new `CompletionPort`. The second time we call it we associate our resource \(in this case our `Socket`\) with the completion port we created.
+Some things to make a note of. The `CreateIoCompletionPort` syscall does different things based on the parameters passed in. The first time we call it, we create a new `CompletionPort`. The second time we call it we associate our resource \(in this case our `Socket`\) with the completion port we created.
 
 {% hint style="info" %}
 See the [relevant paragraph in the CreateIoCompletionPort documentation](https://docs.microsoft.com/en-us/windows/win32/fileio/createiocompletionport#remarks) for more information about the modes it can be used in.
 {% endhint %}
 
-Next is how we identify different events. When you associate a resource, you can also associate it with a `CompletionKey`which will be returned with every event that has happened on that resource.
+Next is how we identify different events. When you associate a resource, you can also associate it with a `CompletionKey` which will be returned with every event that has happened on that resource.
 
-The problem with this is that the `CompletionKey`is registered on a _per resource basis._ This means that we can't tell what event occurred on that resource.
+The problem with this is that the `CompletionKey` is registered on a _per resource basis._ This means that we can't tell what event occurred on that resource.
 
-A common way to solve this is using the technique of wrapping the `WSAOVERLAPPED`structure which is registered with each event \(on our case in the `WSARecv`syscall\) in another data structure which adds context to identify the event that occurred.
+A common way to solve this is using the technique of wrapping the `WSAOVERLAPPED` structure which is registered with each event \(on our case in the `WSARecv` syscall\) in another data structure which adds context to identify the event that occurred.
 
 {% hint style="info" %}
-This technique is used both in the [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/detail/win_iocp_io_service.hpp) implementation of `IOCP`and in `mio`. Here is a link to the relevant [lines of code in mio's v0.6 branch](https://github.com/tokio-rs/mio/blob/292f26c22603564a21c34de053c6c75a34c6457b/src/sys/windows/selector.rs#L476-L521) \(mio has recently changed to wepoll which avoids IOCP so we need to look at previous versions to look at the implementation\).
+This technique is used both in the [BOOST ASIO](https://www.boost.org/doc/libs/1_42_0/boost/asio/detail/win_iocp_io_service.hpp) implementation of `IOCP` and in `mio`. Here is a link to the relevant [lines of code in mio's v0.6 branch](https://github.com/tokio-rs/mio/blob/292f26c22603564a21c34de053c6c75a34c6457b/src/sys/windows/selector.rs#L476-L521) \(mio has recently changed to wepoll which avoids IOCP so we need to look at previous versions to look at the implementation\).
 {% endhint %}
 
-Now, to do that we take advantage of the fact that when we create a structure with the `#[repr(C)]`attribute and add a field of the type `WSAOVERLAPPED`first, the structure will have the same memory layout as a `WSAOVERLAPPED`struct for the first bytes.
+Now, to do that we take advantage of the fact that when we create a structure with the `#[repr(C)]` attribute and add a field of the type `WSAOVERLAPPED` first, the structure will have the same memory layout as a `WSAOVERLAPPED` struct for the first bytes.
 
-This means that if we cast this struct \(called an `Operation`in our example\) as a pointer to a `WSAOVERLAPPED`struct, the OS will only touch the bytes as if it was a normal pointer to a `WSAOVERLAPPED`structure.
+This means that if we cast this struct \(called an `Operation`in our example\) as a pointer to a `WSAOVERLAPPED` struct, the OS will only touch the bytes as if it was a normal pointer to a `WSAOVERLAPPED` structure.
 
-When we retrieve the pointer to this structure when the event has occurred we can cast it back to a `Operation`struct and access the extra context about the event. In our case it's just a number to identify the event.
+When we retrieve the pointer to this structure when the event has occurred we can cast it back to a `Operation` struct and access the extra context about the event. In our case it's just a number to identify the event.
 
 {% hint style="info" %}
-When calling `GetQueuedCompletionStatusEx`a pointer to the `WSAOVERLAPPED`structure we passed in when registering interest in `WSARecv`is available in the `lpoverlapped`field of the `OVERLAPPED_ENTRY`structure we get for each finished event.
+When calling `GetQueuedCompletionStatusEx` a pointer to the `WSAOVERLAPPED` structure we passed in when registering interest in `WSARecv` is available in the `lpoverlapped` field of the `OVERLAPPED_ENTRY` structure we get for each finished event.
 {% endhint %}
 
 **Running this code should give you the following result:**
@@ -480,9 +480,8 @@ RECEIVED: 1
 FINISHED
 ```
 
-Unlike the `epoll`printout I didn't include the debug print of the `Operation`struct since it's too much data to show here, but if you change line 161 to `println!("RECEIVED: {:?}", operation);`you'll see all the data we get returned.
+Unlike the `epoll`printout I didn't include the debug print of the `Operation` struct since it's too much data to show here, but if you change line 161 to `println!("RECEIVED: {:?}", operation);` you'll see all the data we get returned.
 
-Often the `context`field will be a callback you want to run once the event has competed.
+Often the `context` field will be a callback you want to run once the event has competed.
 
 Now, as you see, in many ways, IOCP is significantly more complex than the two others, but fortunately it also has the best documentation.
-
