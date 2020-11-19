@@ -5,7 +5,7 @@
 * Install gitbook
 
     ```
-    $ npm i gitbook-cli
+    $ npm i gitbook-cli -g
     ```
 
 * Install gitbook plugins
@@ -42,3 +42,27 @@ $ sudo ln -s ~/Applications/calibre.app/Contents/MacOS/ebook-convert /usr/bin
 ```
 
 You can replace `/usr/bin` with any directory that is in your $PATH.
+
+-----
+
+## Troubleshooting
+
+If you have issues trying to run `gitbook`:
+
+```
+if (cb) cb.apply(this, arguments)
+         ^
+TypeError: cb.apply is not a function
+```
+
+Try commenting these lines in
+
+ `(path from the error message)/polyfills.js`:
+
+```
+//fs.stat = statFix(fs.stat)
+//fs.fstat = statFix(fs.fstat)
+//fs.lstat = statFix(fs.lstat)
+```
+
+That worked for me!
