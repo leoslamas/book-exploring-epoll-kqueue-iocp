@@ -1,0 +1,8 @@
+[book]
+authors = ["Carl Fredrik Samson"]
+language = "en"
+multilingual = false
+src = "./"
+title = "Exploring Epoll, Kqueue and IOCP with Rust"
+
+[output.epub]
